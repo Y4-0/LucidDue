@@ -1,0 +1,14 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+# Prisma-generated AI skill files (not part of our project)
+.claude/
+.windsurf/
+.agents/skills/
+skills-lock.json
+
+# Mac OS
+.DS_Store
