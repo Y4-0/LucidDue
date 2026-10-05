@@ -14,6 +14,8 @@ function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordScore, setPasswordScore] = useState(0);
   const [error, setError] = useState<string | null>(
     oauthError === "oauth_failed" ? "Authentication canceled or failed." : null
   );
@@ -22,8 +24,29 @@ function RegisterForm() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    let score = 0;
+    if (password.length >= 8) score += 20;
+    if (password.match(/[A-Z]/)) score += 20;
+    if (password.match(/[a-z]/)) score += 20;
+    if (password.match(/[0-9]/)) score += 20;
+    if (password.match(/[^A-Za-z0-9]/)) score += 20;
+    setPasswordScore(score);
+  }, [password]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    
+    if (passwordScore < 80) {
+      setError("Please choose a stronger password.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
@@ -164,7 +187,46 @@ function RegisterForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-oatmeal rounded-lg outline-none transition-colors focus:border-forest text-onyx placeholder:text-stone/50 bg-transparent"
                 placeholder="••••••••"
-                minLength={8}
+              />
+              
+              {/* Password Strength Indicator */}
+              {password.length > 0 && (
+                <div className="mt-1">
+                  <div className="h-1.5 w-full bg-oatmeal rounded-full overflow-hidden flex">
+                    <div 
+                      className={`h-full transition-all duration-300 ${
+                        passwordScore < 40 ? 'bg-crimson w-1/4' : 
+                        passwordScore < 80 ? 'bg-amber-400 w-2/4' : 
+                        passwordScore < 100 ? 'bg-sage w-3/4' : 
+                        'bg-forest w-full'
+                      }`}
+                    />
+                  </div>
+                  <p className={`text-xs mt-1 font-medium ${
+                    passwordScore < 40 ? 'text-crimson' : 
+                    passwordScore < 80 ? 'text-amber-500' : 
+                    'text-forest'
+                  }`}>
+                    {passwordScore < 40 ? 'Weak' : 
+                     passwordScore < 80 ? 'Fair' : 
+                     passwordScore < 100 ? 'Good' : 'Strong'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-onyx">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-oatmeal rounded-lg outline-none transition-colors focus:border-forest text-onyx placeholder:text-stone/50 bg-transparent"
+                placeholder="••••••••"
               />
             </div>
 
