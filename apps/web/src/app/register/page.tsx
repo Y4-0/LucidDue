@@ -1,16 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export default function RegisterPage() {
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get("error");
+
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    oauthError === "oauth_failed" ? "Authentication canceled or failed." : null
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -46,7 +52,8 @@ export default function RegisterPage() {
     try {
       const result = await authClient.signIn.social({
           provider: "google",
-          callbackURL: "/dashboard"
+          callbackURL: "http://localhost:3000/dashboard",
+          errorCallbackURL: "http://localhost:3000/register?error=oauth_failed"
       });
       if (result.error) {
           setError(result.error.message || "Failed to sign up with Google");
@@ -212,5 +219,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-pearl p-8 flex items-center justify-center">Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

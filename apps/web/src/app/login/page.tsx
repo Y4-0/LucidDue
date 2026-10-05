@@ -1,15 +1,26 @@
 "use client";
 
+
+
+
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { authClient } from "@/lib/auth-client";
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get("error");
+
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    oauthError === "oauth_failed" ? "Authentication canceled or failed." : null
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -19,18 +30,18 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const result = await authClient.signIn.email({
-          email,
-          password,
+        email,
+        password,
       });
-      
+
       if (result.error) {
-          setError(result.error.message || "Failed to sign in");
-          setIsLoading(false);
+        setError(result.error.message || "Failed to sign in");
+        setIsLoading(false);
       } else {
-          window.location.href = "/dashboard";
+        window.location.href = "/dashboard";
       }
     } catch (err) {
       setError("Network error. Backend might not be running.");
@@ -43,12 +54,13 @@ export default function LoginPage() {
     setError(null);
     try {
       const result = await authClient.signIn.social({
-          provider: "google",
-          callbackURL: "/dashboard"
+        provider: "google",
+        callbackURL: "http://localhost:3000/dashboard",
+        errorCallbackURL: "http://localhost:3000/login?error=oauth_failed"
       });
       if (result.error) {
-          setError(result.error.message || "Failed to sign in with Google");
-          setIsLoading(false);
+        setError(result.error.message || "Failed to sign in with Google");
+        setIsLoading(false);
       }
     } catch (err) {
       setError("Network error. Backend might not be running.");
@@ -91,15 +103,15 @@ export default function LoginPage() {
             Manage your invoices and follow-ups.
           </p>
 
-          <button 
+          <button
             onClick={handleGoogleSignIn}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-oatmeal rounded-lg hover:bg-pearl transition-colors text-onyx font-medium cursor-pointer"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
             </svg>
             Continue with Google
           </button>
@@ -154,7 +166,7 @@ export default function LoginPage() {
             >
               Sign In
             </button>
-            
+
             <p className="text-center text-sm text-stone mt-2">
               Don't have an account?{" "}
               <Link href="/register" className="text-forest hover:text-forest-dark font-medium transition-colors">
@@ -167,9 +179,9 @@ export default function LoginPage() {
 
       {/* Right Column (Vibe Side - Desktop Only) */}
       <div className="hidden lg:flex w-1/2 bg-[#2E3A32] relative flex-col items-center justify-center p-12 overflow-hidden">
-        
+
         {/* Abstract Grid and Binary Background aligned to the palette */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.07] pointer-events-none"
           style={{
             backgroundImage: `
@@ -182,22 +194,31 @@ export default function LoginPage() {
 
         {/* Scattered small binary text */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10 font-mono text-[10px] text-pearl font-bold leading-tight select-none flex flex-wrap gap-x-2 gap-y-1 p-4" aria-hidden="true">
-            {mounted && Array.from({ length: 400 }).map((_, i) => (
-                <span key={i} className={Math.random() > 0.8 ? 'opacity-100 text-[#4CAF50]' : 'opacity-40'}>
-                    {Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}
-                </span>
-            ))}
+          {mounted && Array.from({ length: 400 }).map((_, i) => (
+            <span key={i} className={Math.random() > 0.8 ? 'opacity-100 text-[#4CAF50]' : 'opacity-40'}>
+              {Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}
+            </span>
+          ))}
         </div>
 
         {/* Subtle radial glow */}
         <div className="absolute inset-0 bg-radial-[at_center_center] from-transparent to-[#2E3A32] pointer-events-none" />
-        
+
         <div className="relative z-10 max-w-lg text-center bg-[#2E3A32]/40 p-8 rounded-2xl backdrop-blur-sm border border-pearl/10 shadow-2xl">
           <h2 className="text-5xl md:text-6xl font-serif text-pearl leading-[1.15] tracking-tight">
-            Your work is done.<br/>Let’s get you paid.
+            Your work is done.<br />Let’s get you paid.
           </h2>
         </div>
       </div>
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-pearl p-8 flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
