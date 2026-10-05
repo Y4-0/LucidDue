@@ -21,18 +21,22 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError(null);
     
-    const result = await authClient.signUp.email({
-        email,
-        password,
-        name,
-    });
-    
-    if (result.error) {
-        setError(result.error.message || "Failed to create account");
-        setIsLoading(false);
-    } else {
-        // Successful registration, redirect to dashboard or login
-        window.location.href = "/dashboard";
+    try {
+      const result = await authClient.signUp.email({
+          email,
+          password,
+          name,
+      });
+      
+      if (result.error) {
+          setError(result.error.message || "Failed to create account");
+          setIsLoading(false);
+      } else {
+          window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      setError("Network error. Backend might not be running.");
+      setIsLoading(false);
     }
   };
 

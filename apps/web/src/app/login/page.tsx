@@ -20,17 +20,21 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     
-    const result = await authClient.signIn.email({
-        email,
-        password,
-    });
-    
-    if (result.error) {
-        setError(result.error.message || "Failed to sign in");
-        setIsLoading(false);
-    } else {
-        // Successful login, keep skeleton loader showing until redirect happens via router
-        window.location.href = "/dashboard";
+    try {
+      const result = await authClient.signIn.email({
+          email,
+          password,
+      });
+      
+      if (result.error) {
+          setError(result.error.message || "Failed to sign in");
+          setIsLoading(false);
+      } else {
+          window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      setError("Network error. Backend might not be running.");
+      setIsLoading(false);
     }
   };
 
