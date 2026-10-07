@@ -66,6 +66,11 @@ export default function DashboardPage() {
   const [originalInvoiceForm, setOriginalInvoiceForm] = useState(initialInvoiceForm);
   const isInvoiceDirty = JSON.stringify(invoiceForm) !== JSON.stringify(originalInvoiceForm);
 
+  // --- Follow Up State ---
+  const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
+  const [selectedFollowUpInvoice, setSelectedFollowUpInvoice] = useState<any>(null);
+  const [isSendingFollowUp, setIsSendingFollowUp] = useState(false);
+
   // Initial Fetch
   useEffect(() => {
     authClient.getSession().then(({ data, error }) => {
@@ -99,6 +104,22 @@ export default function DashboardPage() {
   const handleSignOut = async () => {
     await authClient.signOut();
     router.push("/login");
+  };
+
+  const openFollowUp = (inv: any) => {
+    setSelectedFollowUpInvoice(inv);
+    setIsFollowUpOpen(true);
+  };
+
+  const handleSendFollowUp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSendingFollowUp(true);
+    // Simulate sending an email
+    setTimeout(() => {
+      setIsSendingFollowUp(false);
+      setIsFollowUpOpen(false);
+      showToast("Follow-up email sent successfully!");
+    }, 1200);
   };
 
   // --- Handlers for Client ---
@@ -287,26 +308,26 @@ export default function DashboardPage() {
             {clients.length > 0 && (
               <button 
                 onClick={() => setIsManageClientsOpen(true)}
-                className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 rounded-lg transition-colors cursor-pointer"
+                className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer"
               >
                 Manage Clients
               </button>
             )}
             <button 
               onClick={openNewClient}
-              className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-transparent hover:bg-black/5 rounded-lg transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-transparent hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer"
             >
               + Add Client
             </button>
             <button 
               onClick={openNewInvoice}
-              className="px-5 py-2.5 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer shadow-sm"
+              className="px-5 py-2.5 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
             >
               + New Invoice
             </button>
             <button 
               onClick={handleSignOut} 
-              className="px-5 py-2.5 bg-transparent text-[#8A3C3C] hover:bg-[#8A3C3C]/10 font-medium rounded-lg transition-colors ml-2 cursor-pointer"
+              className="px-5 py-2.5 bg-transparent text-[#8A3C3C] hover:bg-[#8A3C3C]/10 font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 ml-2 cursor-pointer"
               title="Sign out"
             >
               Sign Out
@@ -356,11 +377,14 @@ export default function DashboardPage() {
                   <div className="flex gap-3 w-full sm:w-auto">
                     <button 
                       onClick={() => openUpdateInvoice(inv)}
-                      className="px-6 py-3 bg-transparent border border-[#EFECE6] hover:bg-white text-[#2C2C2A] font-medium rounded-lg transition-colors w-full sm:w-auto cursor-pointer"
+                      className="px-6 py-3 bg-transparent border border-[#EFECE6] hover:bg-white text-[#2C2C2A] font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto cursor-pointer shadow-sm hover:shadow"
                     >
                       View
                     </button>
-                    <button className="whitespace-nowrap px-6 py-3 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors w-full sm:w-auto shadow-sm cursor-pointer">
+                    <button 
+                      onClick={() => openFollowUp(inv)}
+                      className="whitespace-nowrap px-6 py-3 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto shadow-sm hover:shadow cursor-pointer"
+                    >
                       Follow-up
                     </button>
                   </div>
@@ -518,7 +542,7 @@ export default function DashboardPage() {
               <label className="text-sm font-semibold text-[#2C2C2A]">Client <span className="text-[#8A3C3C]">*</span></label>
               <button 
                 type="button" 
-                className="text-xs font-medium text-[#3A4A3F] hover:underline cursor-pointer"
+                className="text-xs font-medium text-[#3A4A3F] hover:underline cursor-pointer transition-all"
                 onClick={() => { setIsInvoiceDrawerOpen(false); openNewClient(); }}
               >
                 Create new client
@@ -577,22 +601,82 @@ export default function DashboardPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="px-4 py-2 text-[#8A3C3C] font-medium hover:bg-[#8A3C3C]/10 rounded-lg transition-colors cursor-pointer"
+                  className="px-4 py-2 text-[#8A3C3C] font-medium hover:bg-[#8A3C3C]/10 rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 cursor-pointer"
                 >
                   Delete
                 </button>
               )}
             </div>
             <div className="flex gap-3">
-              <button type="button" onClick={closeInvoiceDrawer} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
+              <button type="button" onClick={closeInvoiceDrawer} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer">
                 Cancel
               </button>
-              <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                 {isSavingInvoice ? "Saving..." : (selectedInvoiceId ? "Update" : "Create")}
               </button>
             </div>
           </div>
         </form>
+      </Drawer>
+
+      {/* --- FOLLOW UP DRAWER --- */}
+      <Drawer isOpen={isFollowUpOpen} onClose={() => setIsFollowUpOpen(false)} title="Send Follow-up">
+        {selectedFollowUpInvoice && (
+          <form onSubmit={handleSendFollowUp} className="flex flex-col h-full">
+            <div className="flex-1 space-y-5">
+              
+              <div className="bg-[#FFFFFF] border border-[#EFECE6] p-4 rounded-lg flex items-center justify-between shadow-sm">
+                <div>
+                  <p className="text-xs text-[#6A6A65] font-semibold uppercase tracking-wider mb-0.5">To Client</p>
+                  <p className="font-medium text-[#2C2C2A]">{selectedFollowUpInvoice.client?.name}</p>
+                  <p className="text-sm text-[#6A6A65]">{selectedFollowUpInvoice.client?.email || "No email recorded"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-[#6A6A65] font-semibold uppercase tracking-wider mb-0.5">Amount Due</p>
+                  <p className="font-medium text-[#8A3C3C]">{formatCurrency(selectedFollowUpInvoice.amount)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                <FormField 
+                  label="Subject" 
+                  defaultValue={`Following up: Invoice ${selectedFollowUpInvoice.invoiceNumber}`}
+                  readOnly
+                  className="bg-black/5 font-medium"
+                />
+                <FormField 
+                  as="textarea"
+                  label="Message Template" 
+                  rows={8}
+                  defaultValue={`Hi ${selectedFollowUpInvoice.client?.name},\n\nI hope you're having a great week.\n\nI'm just writing to follow up on invoice ${selectedFollowUpInvoice.invoiceNumber} for ${formatCurrency(selectedFollowUpInvoice.amount)}, which was due on ${new Date(selectedFollowUpInvoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.\n\nPlease let me know if you have any questions or if you need me to resend the invoice.\n\nBest regards,\n${firstName}`}
+                />
+              </div>
+
+            </div>
+            
+            <div className="flex justify-end items-center pt-6 mt-6 border-t border-[#EFECE6] gap-3">
+              <button type="button" onClick={() => setIsFollowUpOpen(false)} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer">
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={isSendingFollowUp || !selectedFollowUpInvoice.client?.email} 
+                className="flex items-center gap-2 px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:active:scale-100"
+              >
+                {isSendingFollowUp ? (
+                  <>Sending...</>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M3.478 2.404a.75.75 0 00-.926.941l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.404z" />
+                    </svg>
+                    Send Email
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
       </Drawer>
 
       <ConfirmDialog 

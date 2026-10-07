@@ -3,6 +3,24 @@
 import React, { useEffect, useState } from "react";
 import { X, CheckCircle, AlertTriangle } from "lucide-react";
 
+const animationsStyle = `
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scaleIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .anim-slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .anim-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+  .anim-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+`;
+
 // --- MODAL ---
 interface ModalProps {
   isOpen: boolean;
@@ -23,11 +41,12 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-0">
-      <div className="fixed inset-0 bg-[#2C2C2A]/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
-      <div className="relative bg-[#FDFBF7] rounded-xl shadow-xl w-full max-w-md border border-[#EFECE6] flex flex-col max-h-[90vh]">
+      <style>{animationsStyle}</style>
+      <div className="fixed inset-0 bg-[#2C2C2A]/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
+      <div className="relative bg-[#FDFBF7] rounded-xl shadow-xl w-full max-w-md border border-[#EFECE6] flex flex-col max-h-[90vh] anim-scale-in">
         <div className="flex items-center justify-between p-5 border-b border-[#EFECE6]">
           <h2 className="text-lg font-semibold text-[#2C2C2A]">{title}</h2>
-          <button onClick={onClose} className="text-[#6A6A65] hover:text-[#2C2C2A] transition-colors rounded-md hover:bg-[#EFECE6]/50 p-1">
+          <button onClick={onClose} className="text-[#6A6A65] hover:text-[#2C2C2A] hover:rotate-90 transition-all duration-300 rounded-md hover:bg-[#EFECE6]/50 p-1">
             <X size={20} />
           </button>
         </div>
@@ -59,11 +78,12 @@ export function Drawer({ isOpen, onClose, title, children }: DrawerProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="fixed inset-0 bg-[#2C2C2A]/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
-      <div className="relative w-full sm:w-[450px] h-full bg-[#FDFBF7] shadow-2xl border-l border-[#EFECE6] flex flex-col transform transition-transform duration-300 ease-in-out">
+      <style>{animationsStyle}</style>
+      <div className="fixed inset-0 bg-[#2C2C2A]/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
+      <div className="relative w-full sm:w-[450px] h-full bg-[#FDFBF7] shadow-2xl border-l border-[#EFECE6] flex flex-col anim-slide-in-right">
         <div className="flex items-center justify-between p-6 border-b border-[#EFECE6]">
           <h2 className="text-xl font-semibold text-[#2C2C2A]">{title}</h2>
-          <button onClick={onClose} className="text-[#6A6A65] hover:text-[#2C2C2A] transition-colors rounded-md hover:bg-[#EFECE6]/50 p-1">
+          <button onClick={onClose} className="text-[#6A6A65] hover:text-[#2C2C2A] hover:rotate-90 transition-all duration-300 rounded-md hover:bg-[#EFECE6]/50 p-1">
             <X size={24} />
           </button>
         </div>
