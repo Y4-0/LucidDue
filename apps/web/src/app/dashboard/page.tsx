@@ -234,7 +234,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-3xl font-medium text-[#2C2C2A] mb-4">{formatCurrency(inv.amount)}</div>
                     <div className="inline-flex px-2.5 py-1 bg-[#F4DADA]/50 border border-[#8A3C3C]/10 text-[#8A3C3C] text-xs font-semibold rounded text-center tracking-wide uppercase">
-                      {inv.status === 'OVERDUE' ? 'Overdue' : 'Due soon'}
+                      Overdue
                     </div>
                   </div>
                   <button className="whitespace-nowrap px-6 py-3 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors w-full sm:w-auto shadow-sm cursor-pointer">

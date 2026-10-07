@@ -1,5 +1,7 @@
 # LucidDue
 
+[📖 View Project Documentation & Development Log](./CHANGELOG.md)
+
 > A lightweight, secure SaaS dashboard for freelancers to track outstanding invoices and send professional follow-ups. It answers exactly what needs your attention right now, without the overhead of traditional accounting software.
 
 ## 🚀 Overview
