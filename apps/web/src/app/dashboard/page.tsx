@@ -82,6 +82,7 @@ export default function DashboardPage() {
   const [isSettingUp2FA, setIsSettingUp2FA] = useState(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [backupCodes, setBackupCodes] = useState<string>("");
+  const [hasPassword, setHasPassword] = useState(true);
 
   useEffect(() => {
     // Check initial dark mode state
@@ -100,14 +101,15 @@ export default function DashboardPage() {
 
   const handleEnable2FA = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!twoFactorPassword) {
+    if (hasPassword && !twoFactorPassword) {
       showToast("Please enter your password", "error");
       return;
     }
     
     setIsSettingUp2FA(true);
     try {
-      const res = await authClient.twoFactor.enable({ password: twoFactorPassword });
+      const payload = hasPassword ? { password: twoFactorPassword } : {};
+      const res = await authClient.twoFactor.enable(payload);
       if (res.data?.totpURI) {
         setTwoFactorUri(res.data.totpURI);
         if (res.data.backupCodes) {
@@ -117,7 +119,7 @@ export default function DashboardPage() {
         showToast(res.error.message || "Failed to generate 2FA", "error");
       }
     } catch (e: any) {
-      showToast("Error generating 2FA. Did you sign up with Google?", "error");
+      showToast("Error generating 2FA. Please try again.", "error");
     } finally {
       setIsSettingUp2FA(false);
     }
@@ -163,6 +165,9 @@ export default function DashboardPage() {
         setClients(res.data.clients);
         setUpcomingInvoices(res.data.upcomingInvoices);
         setActionNeededInvoices(res.data.actionNeededInvoices);
+        if (res.data.hasPassword !== undefined) {
+          setHasPassword(res.data.hasPassword);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -789,19 +794,23 @@ export default function DashboardPage() {
                     {!twoFactorUri ? (
                       <form onSubmit={handleEnable2FA} className="flex gap-3 items-end">
                         <div className="flex-1">
-                          <FormField 
-                            label="Enter your password to setup"
-                            type="password"
-                            required
-                            value={twoFactorPassword}
-                            onChange={e => setTwoFactorPassword(e.target.value)}
-                            placeholder="Password"
-                          />
+                          {hasPassword ? (
+                            <FormField 
+                              label="Enter your password to setup"
+                              type="password"
+                              required
+                              value={twoFactorPassword}
+                              onChange={e => setTwoFactorPassword(e.target.value)}
+                              placeholder="Password"
+                            />
+                          ) : (
+                            <p className="text-sm font-medium text-onyx mb-2">You signed up with Google. Click below to generate your 2FA code.</p>
+                          )}
                         </div>
                         <button 
                           type="submit" 
                           disabled={isSettingUp2FA}
-                          className="mb-4 px-4 py-2.5 bg-onyx text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-70"
+                          className={`px-4 py-2.5 bg-onyx text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-70 ${hasPassword ? 'mb-4' : ''}`}
                         >
                           {isSettingUp2FA ? "..." : "Setup 2FA"}
                         </button>

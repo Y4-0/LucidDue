@@ -44,6 +44,11 @@ export class AppService {
       }
     });
 
+    const credentialAccount = await this.prisma.account.findFirst({
+      where: { userId, providerId: 'credential' }
+    });
+    const hasPassword = !!credentialAccount;
+
     return {
       metrics: {
         totalOutstanding,
@@ -51,6 +56,7 @@ export class AppService {
         overdueInvoices,
         activeClients
       },
+      hasPassword,
       clients,
       upcomingInvoices: upcomingInvoices.slice(0, 5),
       actionNeededInvoices: actionNeededInvoices.slice(0, 5)
