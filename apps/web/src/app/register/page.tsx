@@ -232,7 +232,7 @@ function RegisterForm() {
 
             <button
               type="submit"
-              className="w-full bg-forest hover:bg-forest-dark text-white font-medium py-3 px-4 rounded-lg transition-colors mt-2 cursor-pointer"
+              className="w-full bg-forest hover:bg-forest-dark text-pure-white font-medium py-3 px-4 rounded-lg transition-colors mt-2 cursor-pointer"
             >
               Create Account
             </button>
@@ -263,7 +263,7 @@ function RegisterForm() {
         ></div>
 
         {/* Scattered small binary text */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10 font-mono text-[10px] text-pearl font-bold leading-tight select-none flex flex-wrap gap-x-2 gap-y-1 p-4" aria-hidden="true">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10 font-mono text-[10px] text-pure-white font-bold leading-tight select-none flex flex-wrap gap-x-2 gap-y-1 p-4" aria-hidden="true">
             {mounted && Array.from({ length: 400 }).map((_, i) => (
                 <span key={i} className={Math.random() > 0.8 ? 'opacity-100 text-[#4CAF50]' : 'opacity-40'}>
                     {Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}{Math.random() > 0.5 ? '1' : '0'}
@@ -275,7 +275,7 @@ function RegisterForm() {
         <div className="absolute inset-0 bg-radial-[at_center_center] from-transparent to-[#2E3A32] pointer-events-none" />
         
         <div className="relative z-10 max-w-lg text-center bg-[#2E3A32]/40 p-8 rounded-2xl backdrop-blur-sm border border-pearl/10 shadow-2xl">
-          <h2 className="text-5xl md:text-6xl font-serif text-pearl leading-[1.15] tracking-tight">
+          <h2 className="text-5xl md:text-6xl font-serif text-pure-white leading-[1.15] tracking-tight">
             Stop chasing.<br/>Start tracking.
           </h2>
         </div>

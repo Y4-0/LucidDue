@@ -87,6 +87,17 @@ export default function DashboardPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [passwordScore, setPasswordScore] = useState(0);
+
+  useEffect(() => {
+    let score = 0;
+    if (newPassword.length >= 8) score += 20;
+    if (newPassword.match(/[A-Z]/)) score += 20;
+    if (newPassword.match(/[a-z]/)) score += 20;
+    if (newPassword.match(/[0-9]/)) score += 20;
+    if (newPassword.match(/[^A-Za-z0-9]/)) score += 20;
+    setPasswordScore(score);
+  }, [newPassword]);
 
   useEffect(() => {
     // Check initial dark mode state
@@ -120,6 +131,10 @@ export default function DashboardPage() {
     }
     if (newPassword.length < 8) {
       showToast("Password must be at least 8 characters", "error");
+      return;
+    }
+    if (passwordScore < 80) {
+      showToast("Please choose a stronger password.", "error");
       return;
     }
     setIsSettingPassword(true);
@@ -865,6 +880,29 @@ export default function DashboardPage() {
                           onChange={e => setNewPassword(e.target.value)}
                           placeholder="Must be at least 8 characters"
                         />
+                        {newPassword.length > 0 && (
+                          <div className="mt-1">
+                            <div className="h-1.5 w-full bg-oatmeal rounded-full overflow-hidden flex">
+                              <div 
+                                className={`h-full transition-all duration-300 ${
+                                  passwordScore < 40 ? 'bg-crimson w-1/4' : 
+                                  passwordScore < 80 ? 'bg-amber-400 w-2/4' : 
+                                  passwordScore < 100 ? 'bg-sage w-3/4' : 
+                                  'bg-forest w-full'
+                                }`}
+                              />
+                            </div>
+                            <p className={`text-xs mt-1 font-medium ${
+                              passwordScore < 40 ? 'text-crimson' : 
+                              passwordScore < 80 ? 'text-amber-500' : 
+                              'text-forest'
+                            }`}>
+                              {passwordScore < 40 ? 'Weak' : 
+                               passwordScore < 80 ? 'Fair' : 
+                               passwordScore < 100 ? 'Good' : 'Strong'}
+                            </p>
+                          </div>
+                        )}
                         <FormField 
                           label="Confirm Password"
                           type="password"
