@@ -8,18 +8,55 @@ const animationsStyle = `
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
   }
+  @keyframes slideOutRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+  }
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
   @keyframes scaleIn {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
   }
+  @keyframes scaleOut {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(0.95); opacity: 0; }
+  }
   .anim-slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .anim-slide-out-right { animation: slideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   .anim-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+  .anim-fade-out { animation: fadeOut 0.25s ease-out forwards; }
   .anim-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .anim-scale-out { animation: scaleOut 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 `;
+
+export function useMountAnimation(isOpen: boolean, delay: number = 300) {
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (isOpen && !shouldRender) {
+      setShouldRender(true);
+      setIsClosing(false);
+    } else if (!isOpen && shouldRender) {
+      setIsClosing(true);
+      timeoutId = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, delay);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [isOpen, shouldRender, delay]);
+
+  return { shouldRender, isClosing };
+}
 
 // --- MODAL ---
 interface ModalProps {
@@ -29,6 +66,8 @@ interface ModalProps {
   children: React.ReactNode;
 }
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const { shouldRender, isClosing } = useMountAnimation(isOpen, 250);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -37,16 +76,16 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-0">
       <style>{animationsStyle}</style>
-      <div className="fixed inset-0 bg-onyx/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
-      <div className="relative bg-pearl rounded-xl shadow-xl w-full max-w-md border border-oatmeal flex flex-col max-h-[90vh] anim-scale-in">
+      <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm ${isClosing ? 'anim-fade-out' : 'anim-fade-in'}`} onClick={onClose} />
+      <div className={`relative bg-pearl rounded-xl shadow-xl w-full max-w-md border border-oatmeal flex flex-col max-h-[90vh] ${isClosing ? 'anim-scale-out' : 'anim-scale-in'}`}>
         <div className="flex items-center justify-between p-5 border-b border-oatmeal">
           <h2 className="text-lg font-semibold text-onyx">{title}</h2>
-          <button onClick={onClose} className="text-stone hover:text-onyx hover:rotate-90 transition-all duration-300 rounded-md hover:bg-oatmeal/50 p-1">
+          <button onClick={onClose} className="text-stone hover:text-onyx hover:rotate-90 transition-all duration-300 rounded-md hover:bg-oatmeal/50 p-1 cursor-pointer">
             <X size={20} />
           </button>
         </div>
@@ -66,6 +105,8 @@ interface DrawerProps {
   children: React.ReactNode;
 }
 export function Drawer({ isOpen, onClose, title, children }: DrawerProps) {
+  const { shouldRender, isClosing } = useMountAnimation(isOpen, 300);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -74,16 +115,16 @@ export function Drawer({ isOpen, onClose, title, children }: DrawerProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <style>{animationsStyle}</style>
-      <div className="fixed inset-0 bg-onyx/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
-      <div className="relative w-full sm:w-[450px] h-full bg-pearl shadow-2xl border-l border-oatmeal flex flex-col anim-slide-in-right">
+      <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm ${isClosing ? 'anim-fade-out' : 'anim-fade-in'}`} onClick={onClose} />
+      <div className={`relative w-full sm:w-[450px] h-full bg-pearl shadow-2xl border-l border-oatmeal flex flex-col ${isClosing ? 'anim-slide-out-right' : 'anim-slide-in-right'}`}>
         <div className="flex items-center justify-between p-6 border-b border-oatmeal">
           <h2 className="text-xl font-semibold text-onyx">{title}</h2>
-          <button onClick={onClose} className="text-stone hover:text-onyx hover:rotate-90 transition-all duration-300 rounded-md hover:bg-oatmeal/50 p-1">
+          <button onClick={onClose} className="text-stone hover:text-onyx hover:rotate-90 transition-all duration-300 rounded-md hover:bg-oatmeal/50 p-1 cursor-pointer">
             <X size={24} />
           </button>
         </div>

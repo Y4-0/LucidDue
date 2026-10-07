@@ -18,3 +18,12 @@
 - Wired the frontend dashboard to fetch live data from the backend on load, ensuring it securely passes session credentials.
 - Implemented the "+ Add Client" modal and "+ New Invoice" drawer to push data to the database and instantly refresh the dashboard UI.
 - Fixed UI layer stacking issues to ensure modals correctly appear over side drawers.
+
+**Oct 7, 2026 (Late): CRUD, Polish, & Security**
+- Implemented full CRUD operations for Clients and Invoices, including dedicated "Manage Clients" and "Update Invoice" flows.
+- Added lively, tactile micro-animations to all interactive buttons (hover lifts, rotational exits) to make the UI feel premium and responsive.
+- Engineered a custom `useMountAnimation` hook to provide perfectly timed slide-out and scale-out exit animations for all Drawers and Modals.
+- Fixed the modal backdrop blur to uniformly use a dark tint for optimal contrast regardless of the active theme.
+- Built a "Follow-up" drawer feature pre-populated with a drafted email template and client data for fast communication.
+- Implemented a robust, CSS-variable based Dark Mode theme accessible via a new Settings gear in the header, complete with dynamically adjusted contrast for interactive elements.
+- Integrated a comprehensive Two-Factor Authentication (2FA) setup flow (complete with live QR code generation via `qrcode.react`), which smartly adapts its security requirements based on whether the user signed in via Password or Google OAuth.
