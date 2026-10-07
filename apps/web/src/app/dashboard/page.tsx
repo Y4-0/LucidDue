@@ -108,7 +108,7 @@ export default function DashboardPage() {
     
     setIsSettingUp2FA(true);
     try {
-      const payload = hasPassword ? { password: twoFactorPassword } : {};
+      const payload = { password: hasPassword ? twoFactorPassword : "" };
       const res = await authClient.twoFactor.enable(payload);
       if (res.data?.totpURI) {
         setTwoFactorUri(res.data.totpURI);
@@ -434,8 +434,16 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-onyx mb-1">You're all caught up!</h3>
-                <p className="text-stone">No invoices need your attention today.</p>
+                <h3 className="text-lg font-medium text-onyx mb-2">You're all caught up!</h3>
+                <p className="text-stone mb-6">No invoices need your attention right now. Great job keeping on top of things!</p>
+                <div className="flex gap-4">
+                  <button onClick={openNewClient} className="px-4 py-2 bg-transparent border border-oatmeal text-onyx text-sm font-medium rounded-lg hover:bg-onyx/5 hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer">
+                    Add a Client
+                  </button>
+                  <button onClick={openNewInvoice} className="px-4 py-2 bg-forest text-white text-sm font-medium rounded-lg hover:bg-forest-dark hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer shadow-sm">
+                    Create Invoice
+                  </button>
+                </div>
               </div>
             ) : (
               actionNeededInvoices.map(inv => (
@@ -475,8 +483,20 @@ export default function DashboardPage() {
             
             <div className="flex flex-col gap-3">
               {upcomingInvoices.length === 0 ? (
-                <div className="bg-white border border-oatmeal p-6 rounded-xl text-center">
-                  <p className="text-sm text-stone">No upcoming invoices this week.</p>
+                <div className="bg-white border border-oatmeal p-8 rounded-xl text-center flex flex-col items-center">
+                  <div className="w-10 h-10 bg-pearl rounded-full flex items-center justify-center mb-3 text-stone">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-onyx mb-1">No upcoming invoices</p>
+                  <p className="text-xs text-stone mb-4">Keep the momentum going!</p>
+                  <button 
+                    onClick={openNewInvoice}
+                    className="text-xs font-semibold text-forest hover:text-forest-dark cursor-pointer transition-colors"
+                  >
+                    + Create New Invoice
+                  </button>
                 </div>
               ) : (
                 upcomingInvoices.map(inv => (
