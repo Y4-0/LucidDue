@@ -1,12 +1,33 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UnauthorizedException } from '@nestjs/common';
 import { AppService } from './app.service.js';
+import { auth } from './auth/auth.js';
+import type { Request } from 'express';
 
-@Controller()
+@Controller('api')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  private async getSessionUser(req: Request) {
+    const session = await auth.api.getSession({ headers: req.headers as any });
+    if (!session || !session.user) throw new UnauthorizedException('Not authenticated');
+    return session.user;
+  }
+
+  @Get('dashboard')
+  async getDashboardData(@Req() req: Request) {
+    const user = await this.getSessionUser(req);
+    return this.appService.getDashboardData(user.id);
+  }
+
+  @Post('clients')
+  async createClient(@Req() req: Request, @Body() body: any) {
+    const user = await this.getSessionUser(req);
+    return this.appService.createClient(user.id, body);
+  }
+
+  @Post('invoices')
+  async createInvoice(@Req() req: Request, @Body() body: any) {
+    const user = await this.getSessionUser(req);
+    return this.appService.createInvoice(user.id, body);
   }
 }

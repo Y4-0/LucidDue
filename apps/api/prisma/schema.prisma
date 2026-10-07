@@ -25,6 +25,9 @@ model User {
   twoFactorEnabled Boolean?    @default(false)
   twofactors       TwoFactor[]
 
+  clients          Client[]
+  invoices         Invoice[]
+
   @@unique([email])
   @@map("user")
 }
@@ -115,4 +118,40 @@ model TwoFactor {
   @@index([secret])
   @@index([userId])
   @@map("twoFactor")
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  company   String?
+  notes     String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices  Invoice[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("client")
+}
+
+model Invoice {
+  id            String   @id @default(uuid())
+  invoiceNumber String
+  amount        Float
+  issueDate     DateTime
+  dueDate       DateTime
+  notes         String?
+  status        String   @default("PENDING") // PENDING, PAID, OVERDUE
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([clientId])
+  @@map("invoice")
 }
