@@ -1,25 +1,57 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
-  --color-pearl: #FDFBF7;
-  --color-white: #FFFFFF;
-  --color-oatmeal: #EFECE6;
-  --color-onyx: #2C2C2A;
-  --color-stone: #6A6A65;
-  --color-forest: #3A4A3F;
-  --color-forest-dark: #2E3A32;
-  
-  --color-rose: #F9EAEA;
-  --color-crimson: #8A3C3C;
-  --color-sand: #FDF0D5;
-  --color-ochre: #9E6B20;
-  --color-ash: #F0F0EE;
-  --color-graphite: #5E5E5A;
-  --color-mint: #E5EFE7;
-  --color-pine: #2E5A35;
+  --color-pearl: var(--theme-bg);
+  --color-white: var(--theme-card);
+  --color-oatmeal: var(--theme-border);
+  --color-onyx: var(--theme-text-main);
+  --color-stone: var(--theme-text-muted);
+  --color-forest: var(--theme-primary);
+  --color-forest-dark: var(--theme-primary-hover);
+  --color-crimson: var(--theme-danger-text);
+  --color-danger-bg: var(--theme-danger-bg);
+  --color-danger-border: var(--theme-danger-border);
+  --color-ash: var(--theme-ash);
+  --color-graphite: var(--theme-graphite);
 
   --font-sans: var(--font-inter);
   --font-serif: var(--font-playfair);
+}
+
+:root {
+  --theme-bg: #FDFBF7;
+  --theme-card: #FFFFFF;
+  --theme-border: #EFECE6;
+  --theme-text-main: #2C2C2A;
+  --theme-text-muted: #6A6A65;
+  --theme-primary: #3A4A3F;
+  --theme-primary-hover: #2E3A32;
+  
+  --theme-danger-text: #8A3C3C;
+  --theme-danger-bg: #F9EAEA;
+  --theme-danger-border: #F4DADA;
+  
+  --theme-ash: #F0F0EE;
+  --theme-graphite: #5E5E5A;
+}
+
+.dark {
+  --theme-bg: #1C1C1A;
+  --theme-card: #262624;
+  --theme-border: #3A3A36;
+  --theme-text-main: #EFECE6;
+  --theme-text-muted: #A09F9A;
+  --theme-primary: #4A5D4F;
+  --theme-primary-hover: #5A6D5F;
+
+  --theme-danger-text: #E88E8E;
+  --theme-danger-bg: #3A2A2A;
+  --theme-danger-border: #4A3A3A;
+  
+  --theme-ash: #3A3A36;
+  --theme-graphite: #EFECE6;
 }
 
 body {

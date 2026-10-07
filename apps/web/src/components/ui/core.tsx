@@ -42,11 +42,11 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-0">
       <style>{animationsStyle}</style>
-      <div className="fixed inset-0 bg-[#2C2C2A]/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
-      <div className="relative bg-[#FDFBF7] rounded-xl shadow-xl w-full max-w-md border border-[#EFECE6] flex flex-col max-h-[90vh] anim-scale-in">
-        <div className="flex items-center justify-between p-5 border-b border-[#EFECE6]">
-          <h2 className="text-lg font-semibold text-[#2C2C2A]">{title}</h2>
-          <button onClick={onClose} className="text-[#6A6A65] hover:text-[#2C2C2A] hover:rotate-90 transition-all duration-300 rounded-md hover:bg-[#EFECE6]/50 p-1">
+      <div className="fixed inset-0 bg-onyx/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
+      <div className="relative bg-pearl rounded-xl shadow-xl w-full max-w-md border border-oatmeal flex flex-col max-h-[90vh] anim-scale-in">
+        <div className="flex items-center justify-between p-5 border-b border-oatmeal">
+          <h2 className="text-lg font-semibold text-onyx">{title}</h2>
+          <button onClick={onClose} className="text-stone hover:text-onyx hover:rotate-90 transition-all duration-300 rounded-md hover:bg-oatmeal/50 p-1">
             <X size={20} />
           </button>
         </div>
@@ -79,11 +79,11 @@ export function Drawer({ isOpen, onClose, title, children }: DrawerProps) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <style>{animationsStyle}</style>
-      <div className="fixed inset-0 bg-[#2C2C2A]/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
-      <div className="relative w-full sm:w-[450px] h-full bg-[#FDFBF7] shadow-2xl border-l border-[#EFECE6] flex flex-col anim-slide-in-right">
-        <div className="flex items-center justify-between p-6 border-b border-[#EFECE6]">
-          <h2 className="text-xl font-semibold text-[#2C2C2A]">{title}</h2>
-          <button onClick={onClose} className="text-[#6A6A65] hover:text-[#2C2C2A] hover:rotate-90 transition-all duration-300 rounded-md hover:bg-[#EFECE6]/50 p-1">
+      <div className="fixed inset-0 bg-onyx/40 backdrop-blur-sm anim-fade-in" onClick={onClose} />
+      <div className="relative w-full sm:w-[450px] h-full bg-pearl shadow-2xl border-l border-oatmeal flex flex-col anim-slide-in-right">
+        <div className="flex items-center justify-between p-6 border-b border-oatmeal">
+          <h2 className="text-xl font-semibold text-onyx">{title}</h2>
+          <button onClick={onClose} className="text-stone hover:text-onyx hover:rotate-90 transition-all duration-300 rounded-md hover:bg-oatmeal/50 p-1">
             <X size={24} />
           </button>
         </div>
@@ -105,12 +105,12 @@ export function FormField({ label, error, as = "input", className = "", ...props
   const Component = as as any;
   return (
     <div className="flex flex-col gap-1.5 w-full mb-4">
-      <label className="text-sm font-semibold text-[#2C2C2A]">{label} {props.required && <span className="text-[#8A3C3C]">*</span>}</label>
+      <label className="text-sm font-semibold text-onyx">{label} {props.required && <span className="text-crimson">*</span>}</label>
       <Component 
         {...props} 
-        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-colors bg-white text-[#2C2C2A] placeholder:text-[#6A6A65]/50 ${error ? 'border-[#8A3C3C] focus:border-[#8A3C3C]' : 'border-[#EFECE6] focus:border-[#3A4A3F] hover:border-[#3A4A3F]/30'} ${className}`} 
+        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-colors bg-white text-onyx placeholder:text-stone/50 ${error ? 'border-crimson focus:border-crimson' : 'border-oatmeal focus:border-forest hover:border-forest/30'} ${className}`} 
       />
-      {error && <span className="text-xs font-medium text-[#8A3C3C] mt-0.5">{error}</span>}
+      {error && <span className="text-xs font-medium text-crimson mt-0.5">{error}</span>}
     </div>
   );
 }
@@ -126,17 +126,17 @@ export function DateInput({ label, error, ...props }: Omit<FormFieldProps, "as">
 export function CurrencyInput({ label, error, ...props }: Omit<FormFieldProps, "as" | "type">) {
   return (
     <div className="flex flex-col gap-1.5 w-full mb-4">
-      <label className="text-sm font-semibold text-[#2C2C2A]">{label} {props.required && <span className="text-[#8A3C3C]">*</span>}</label>
+      <label className="text-sm font-semibold text-onyx">{label} {props.required && <span className="text-crimson">*</span>}</label>
       <div className="relative">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6A6A65] font-medium">₹</span>
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone font-medium">₹</span>
         <input 
           type="number"
           step="0.01"
           {...props} 
-          className={`w-full pl-8 pr-4 py-2.5 border rounded-lg outline-none transition-colors bg-white text-[#2C2C2A] placeholder:text-[#6A6A65]/50 ${error ? 'border-[#8A3C3C] focus:border-[#8A3C3C]' : 'border-[#EFECE6] focus:border-[#3A4A3F] hover:border-[#3A4A3F]/30'}`} 
+          className={`w-full pl-8 pr-4 py-2.5 border rounded-lg outline-none transition-colors bg-white text-onyx placeholder:text-stone/50 ${error ? 'border-crimson focus:border-crimson' : 'border-oatmeal focus:border-forest hover:border-forest/30'}`} 
         />
       </div>
-      {error && <span className="text-xs font-medium text-[#8A3C3C] mt-0.5">{error}</span>}
+      {error && <span className="text-xs font-medium text-crimson mt-0.5">{error}</span>}
     </div>
   );
 }
@@ -150,10 +150,10 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ label, error, options, ...props }: SelectProps) {
   return (
     <div className="flex flex-col gap-1.5 w-full mb-4">
-      <label className="text-sm font-semibold text-[#2C2C2A]">{label} {props.required && <span className="text-[#8A3C3C]">*</span>}</label>
+      <label className="text-sm font-semibold text-onyx">{label} {props.required && <span className="text-crimson">*</span>}</label>
       <select 
         {...props} 
-        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-colors bg-white text-[#2C2C2A] appearance-none cursor-pointer ${error ? 'border-[#8A3C3C] focus:border-[#8A3C3C]' : 'border-[#EFECE6] focus:border-[#3A4A3F] hover:border-[#3A4A3F]/30'}`}
+        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition-colors bg-white text-onyx appearance-none cursor-pointer ${error ? 'border-crimson focus:border-crimson' : 'border-oatmeal focus:border-forest hover:border-forest/30'}`}
         style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236A6A65\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
       >
         <option value="" disabled>Select an option</option>
@@ -161,7 +161,7 @@ export function Select({ label, error, options, ...props }: SelectProps) {
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
-      {error && <span className="text-xs font-medium text-[#8A3C3C] mt-0.5">{error}</span>}
+      {error && <span className="text-xs font-medium text-crimson mt-0.5">{error}</span>}
     </div>
   );
 }
@@ -181,12 +181,12 @@ export function ConfirmDialog({ isOpen, title, message, confirmText = "Confirm",
   if (!isOpen) return null;
   return (
     <Modal isOpen={isOpen} onClose={onCancel} title={title}>
-      <p className="text-[#6A6A65] mb-6">{message}</p>
+      <p className="text-stone mb-6">{message}</p>
       <div className="flex justify-end gap-3">
-        <button onClick={onCancel} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors">
+        <button onClick={onCancel} className="px-4 py-2 text-onyx font-medium border border-oatmeal rounded-lg hover:bg-onyx/5 transition-colors">
           {cancelText}
         </button>
-        <button onClick={onConfirm} className={`px-4 py-2 text-white font-medium rounded-lg transition-colors ${isDestructive ? 'bg-[#8A3C3C] hover:bg-[#8A3C3C]/90' : 'bg-[#3A4A3F] hover:bg-[#2E3A32]'}`}>
+        <button onClick={onConfirm} className={`px-4 py-2 text-white font-medium rounded-lg transition-colors ${isDestructive ? 'bg-[#8A3C3C] hover:bg-[#8A3C3C]/90' : 'bg-forest hover:bg-forest-dark'}`}>
           {confirmText}
         </button>
       </div>
@@ -209,9 +209,9 @@ export const useToast = () => {
     return (
       <div className="fixed bottom-6 right-6 z-[60] animate-in slide-in-from-bottom-5 fade-in duration-300">
         <div className={`flex items-center gap-3 px-5 py-3.5 rounded-lg shadow-lg border ${
-          toast.type === 'success' ? 'bg-[#3A4A3F] text-white border-[#2E3A32]' : 
+          toast.type === 'success' ? 'bg-forest text-white border-[#2E3A32]' : 
           toast.type === 'error' ? 'bg-[#8A3C3C] text-white border-[#6c2e2e]' : 
-          'bg-white text-[#2C2C2A] border-[#EFECE6]'
+          'bg-white text-onyx border-oatmeal'
         }`}>
           {toast.type === 'success' && <CheckCircle size={18} />}
           {toast.type === 'error' && <AlertTriangle size={18} />}

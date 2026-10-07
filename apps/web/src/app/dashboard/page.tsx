@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { QRCodeSVG } from "qrcode.react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { 
   Modal, 
   Drawer, 
@@ -70,6 +72,75 @@ export default function DashboardPage() {
   const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
   const [selectedFollowUpInvoice, setSelectedFollowUpInvoice] = useState<any>(null);
   const [isSendingFollowUp, setIsSendingFollowUp] = useState(false);
+
+  // --- Settings & 2FA State ---
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [twoFactorPassword, setTwoFactorPassword] = useState("");
+  const [twoFactorUri, setTwoFactorUri] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [isSettingUp2FA, setIsSettingUp2FA] = useState(false);
+  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string>("");
+
+  useEffect(() => {
+    // Check initial dark mode state
+    if (document.documentElement.classList.contains("dark")) setIsDarkMode(true);
+  }, []);
+
+  const toggleDarkMode = () => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove("dark");
+      setIsDarkMode(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      setIsDarkMode(true);
+    }
+  };
+
+  const handleEnable2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!twoFactorPassword) {
+      showToast("Please enter your password", "error");
+      return;
+    }
+    
+    setIsSettingUp2FA(true);
+    try {
+      const res = await authClient.twoFactor.enable({ password: twoFactorPassword });
+      if (res.data?.totpURI) {
+        setTwoFactorUri(res.data.totpURI);
+        if (res.data.backupCodes) {
+           setBackupCodes(res.data.backupCodes.join(", "));
+        }
+      } else if (res.error) {
+        showToast(res.error.message || "Failed to generate 2FA", "error");
+      }
+    } catch (e: any) {
+      showToast("Error generating 2FA. Did you sign up with Google?", "error");
+    } finally {
+      setIsSettingUp2FA(false);
+    }
+  };
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!twoFactorCode) return;
+    
+    try {
+      const res = await authClient.twoFactor.verifyTotp({ code: twoFactorCode });
+      if (res.data) {
+        showToast("Two-Factor Authentication enabled successfully!");
+        setIs2FAEnabled(true);
+        setTwoFactorUri("");
+        setTwoFactorCode("");
+      } else if (res.error) {
+        showToast("Invalid authentication code", "error");
+      }
+    } catch (e: any) {
+      showToast("Failed to verify code", "error");
+    }
+  };
 
   // Initial Fetch
   useEffect(() => {
@@ -276,8 +347,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
-        <p className="text-[#6A6A65]">Loading session...</p>
+      <div className="min-h-screen bg-pearl flex items-center justify-center">
+        <p className="text-stone">Loading session...</p>
       </div>
     );
   }
@@ -292,55 +363,55 @@ export default function DashboardPage() {
   const clientOptions = clients.map(c => ({ value: c.id, label: c.name }));
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] p-8 md:p-12 font-sans text-[#2C2C2A]">
+    <div className="min-h-screen bg-pearl p-8 md:p-12 font-sans text-onyx">
       <div className="max-w-6xl mx-auto space-y-12">
         
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h1 className="text-4xl font-serif text-[#2C2C2A] tracking-tight">
+            <h1 className="text-4xl font-serif text-onyx tracking-tight">
               Good evening, {firstName}
             </h1>
-            <p className="text-[#6A6A65] mt-2 font-medium">{today}</p>
+            <p className="text-stone mt-2 font-medium">{today}</p>
           </div>
           
           <div className="flex gap-4 items-center flex-wrap">
             {clients.length > 0 && (
               <button 
                 onClick={() => setIsManageClientsOpen(true)}
-                className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer"
+                className="px-5 py-2.5 bg-transparent text-onyx font-medium border border-oatmeal hover:bg-onyx/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer"
               >
                 Manage Clients
               </button>
             )}
             <button 
               onClick={openNewClient}
-              className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-transparent hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer"
+              className="px-5 py-2.5 bg-transparent text-onyx font-medium border border-transparent hover:bg-onyx/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer"
             >
               + Add Client
             </button>
             <button 
               onClick={openNewInvoice}
-              className="px-5 py-2.5 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
+              className="px-5 py-2.5 bg-forest hover:bg-forest-dark text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
             >
               + New Invoice
             </button>
             <button 
-              onClick={handleSignOut} 
-              className="px-5 py-2.5 bg-transparent text-[#8A3C3C] hover:bg-[#8A3C3C]/10 font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 ml-2 cursor-pointer"
-              title="Sign out"
+              onClick={() => setIsSettingsOpen(true)} 
+              className="p-2.5 bg-transparent text-stone hover:text-onyx hover:bg-onyx/5 font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 ml-2 cursor-pointer"
+              title="Settings"
             >
-              Sign Out
+              <SettingsIcon size={22} />
             </button>
           </div>
         </header>
 
         {/* Summary Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard title="Total Outstanding" value={metrics.totalOutstanding > 0 ? formatCurrency(metrics.totalOutstanding) : formattedCurrencyZero} valueColor="text-[#2C2C2A]" />
-          <MetricCard title="Due This Week" value={metrics.dueThisWeek > 0 ? formatCurrency(metrics.dueThisWeek) : formattedCurrencyZero} valueColor="text-[#6A6A65]" />
-          <MetricCard title="Overdue Invoices" value={metrics.overdueInvoices.toString()} valueColor="text-[#8A3C3C]" />
-          <MetricCard title="Active Clients" value={metrics.activeClients.toString()} valueColor="text-[#6A6A65]" />
+          <MetricCard title="Total Outstanding" value={metrics.totalOutstanding > 0 ? formatCurrency(metrics.totalOutstanding) : formattedCurrencyZero} valueColor="text-onyx" />
+          <MetricCard title="Due This Week" value={metrics.dueThisWeek > 0 ? formatCurrency(metrics.dueThisWeek) : formattedCurrencyZero} valueColor="text-stone" />
+          <MetricCard title="Overdue Invoices" value={metrics.overdueInvoices.toString()} valueColor="text-crimson" />
+          <MetricCard title="Active Clients" value={metrics.activeClients.toString()} valueColor="text-stone" />
         </div>
 
         {/* Main Content Area */}
@@ -348,42 +419,42 @@ export default function DashboardPage() {
           
           {/* Left Column: Needs Attention (2/3) */}
           <div className="lg:col-span-2 space-y-5">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-[#6A6A65]">Action Needed</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-stone">Action Needed</h2>
             
             {/* Empty State for Action Needed */}
             {actionNeededInvoices.length === 0 ? (
-              <div className="bg-[#FFFFFF] border border-[#EFECE6] p-8 md:p-12 rounded-xl flex flex-col items-center justify-center text-center">
-                <div className="w-12 h-12 bg-[#FDFBF7] rounded-full flex items-center justify-center mb-4 text-[#3A4A3F]">
+              <div className="bg-white border border-oatmeal p-8 md:p-12 rounded-xl flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-pearl rounded-full flex items-center justify-center mb-4 text-forest">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-[#2C2C2A] mb-1">You're all caught up!</h3>
-                <p className="text-[#6A6A65]">No invoices need your attention today.</p>
+                <h3 className="text-lg font-medium text-onyx mb-1">You're all caught up!</h3>
+                <p className="text-stone">No invoices need your attention today.</p>
               </div>
             ) : (
               actionNeededInvoices.map(inv => (
-                <div key={inv.id} className="bg-[#F9EAEA] border border-[#F4DADA] p-6 md:p-8 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                <div key={inv.id} className="bg-danger-bg border border-danger-border p-6 md:p-8 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="font-semibold text-[#2C2C2A] text-lg">{inv.client?.name}</span>
-                      <span className="text-[#6A6A65]">{inv.invoiceNumber}</span>
+                      <span className="font-semibold text-onyx text-lg">{inv.client?.name}</span>
+                      <span className="text-stone">{inv.invoiceNumber}</span>
                     </div>
-                    <div className="text-3xl font-medium text-[#2C2C2A] mb-4">{formatCurrency(inv.amount)}</div>
-                    <div className="inline-flex px-2.5 py-1 bg-[#F4DADA]/50 border border-[#8A3C3C]/10 text-[#8A3C3C] text-xs font-semibold rounded text-center tracking-wide uppercase">
+                    <div className="text-3xl font-medium text-onyx mb-4">{formatCurrency(inv.amount)}</div>
+                    <div className="inline-flex px-2.5 py-1 bg-danger-border/50 border border-crimson/10 text-crimson text-xs font-semibold rounded text-center tracking-wide uppercase">
                       Overdue
                     </div>
                   </div>
                   <div className="flex gap-3 w-full sm:w-auto">
                     <button 
                       onClick={() => openUpdateInvoice(inv)}
-                      className="px-6 py-3 bg-transparent border border-[#EFECE6] hover:bg-white text-[#2C2C2A] font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto cursor-pointer shadow-sm hover:shadow"
+                      className="px-6 py-3 bg-transparent border border-oatmeal hover:bg-white text-onyx font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto cursor-pointer shadow-sm hover:shadow"
                     >
                       View
                     </button>
                     <button 
                       onClick={() => openFollowUp(inv)}
-                      className="whitespace-nowrap px-6 py-3 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto shadow-sm hover:shadow cursor-pointer"
+                      className="whitespace-nowrap px-6 py-3 bg-forest hover:bg-forest-dark text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto shadow-sm hover:shadow cursor-pointer"
                     >
                       Follow-up
                     </button>
@@ -395,28 +466,28 @@ export default function DashboardPage() {
 
           {/* Right Column: Upcoming (1/3) */}
           <div className="lg:col-span-1 space-y-5">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-[#6A6A65]">Coming Up</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-stone">Coming Up</h2>
             
             <div className="flex flex-col gap-3">
               {upcomingInvoices.length === 0 ? (
-                <div className="bg-[#FFFFFF] border border-[#EFECE6] p-6 rounded-xl text-center">
-                  <p className="text-sm text-[#6A6A65]">No upcoming invoices this week.</p>
+                <div className="bg-white border border-oatmeal p-6 rounded-xl text-center">
+                  <p className="text-sm text-stone">No upcoming invoices this week.</p>
                 </div>
               ) : (
                 upcomingInvoices.map(inv => (
-                  <div key={inv.id} className="bg-[#FFFFFF] border border-[#EFECE6] p-5 rounded-xl group hover:border-[#3A4A3F]/20 transition-colors">
+                  <div key={inv.id} className="bg-white border border-oatmeal p-5 rounded-xl group hover:border-forest/20 transition-colors">
                     <div className="flex justify-between items-start mb-3">
-                      <span className="font-semibold text-[#2C2C2A] truncate max-w-[150px]">{inv.client?.name}</span>
-                      <span className="font-semibold text-[#2C2C2A]">{formatCurrency(inv.amount)}</span>
+                      <span className="font-semibold text-onyx truncate max-w-[150px]">{inv.client?.name}</span>
+                      <span className="font-semibold text-onyx">{formatCurrency(inv.amount)}</span>
                     </div>
                     <div className="flex justify-between items-center mt-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm text-[#6A6A65]">Due {new Date(inv.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                        <span className="px-2 py-0.5 bg-[#F0F0EE] text-[#5E5E5A] text-[11px] font-bold tracking-wide uppercase rounded">Upcoming</span>
+                        <span className="text-sm text-stone">Due {new Date(inv.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <span className="px-2 py-0.5 bg-ash text-graphite text-[11px] font-bold tracking-wide uppercase rounded">Upcoming</span>
                       </div>
                       <button 
                         onClick={() => openUpdateInvoice(inv)}
-                        className="text-sm font-medium text-[#6A6A65] hover:text-[#2C2C2A] cursor-pointer"
+                        className="text-sm font-medium text-stone hover:text-onyx cursor-pointer"
                       >
                         View
                       </button>
@@ -434,22 +505,22 @@ export default function DashboardPage() {
       <Modal isOpen={isManageClientsOpen} onClose={() => setIsManageClientsOpen(false)} title="Manage Clients">
         <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
           {clients.map(client => (
-            <div key={client.id} className="flex justify-between items-center p-3 border border-[#EFECE6] rounded-lg bg-white">
+            <div key={client.id} className="flex justify-between items-center p-3 border border-oatmeal rounded-lg bg-white">
               <div>
-                <p className="font-medium text-[#2C2C2A]">{client.name}</p>
-                {client.email && <p className="text-xs text-[#6A6A65] mt-1">{client.email}</p>}
+                <p className="font-medium text-onyx">{client.name}</p>
+                {client.email && <p className="text-xs text-stone mt-1">{client.email}</p>}
               </div>
               <button 
                 onClick={() => openUpdateClient(client)}
-                className="px-3 py-1.5 text-xs font-medium text-[#2C2C2A] bg-black/5 hover:bg-black/10 rounded cursor-pointer transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-onyx bg-onyx/5 hover:bg-onyx/10 rounded cursor-pointer transition-colors"
               >
                 Edit
               </button>
             </div>
           ))}
         </div>
-        <div className="flex justify-end mt-4 pt-4 border-t border-[#EFECE6]">
-          <button onClick={() => setIsManageClientsOpen(false)} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
+        <div className="flex justify-end mt-4 pt-4 border-t border-oatmeal">
+          <button onClick={() => setIsManageClientsOpen(false)} className="px-4 py-2 text-onyx font-medium border border-oatmeal rounded-lg hover:bg-onyx/5 transition-colors cursor-pointer">
             Close
           </button>
         </div>
@@ -486,23 +557,23 @@ export default function DashboardPage() {
             value={clientForm.notes}
             onChange={e => setClientForm({...clientForm, notes: e.target.value})}
           />
-          <div className="flex justify-between items-center mt-4 pt-4 border-t border-[#EFECE6]">
+          <div className="flex justify-between items-center mt-4 pt-4 border-t border-oatmeal">
             <div>
               {selectedClientId && (
                 <button 
                   type="button" 
                   onClick={() => setShowDeleteClientConfirm(true)}
-                  className="px-4 py-2 text-[#8A3C3C] font-medium hover:bg-[#8A3C3C]/10 rounded-lg transition-colors cursor-pointer"
+                  className="px-4 py-2 text-crimson font-medium hover:bg-crimson/10 rounded-lg transition-colors cursor-pointer"
                 >
                   Delete
                 </button>
               )}
             </div>
             <div className="flex gap-3">
-              <button type="button" onClick={closeAddClient} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
+              <button type="button" onClick={closeAddClient} className="px-4 py-2 text-onyx font-medium border border-oatmeal rounded-lg hover:bg-onyx/5 transition-colors cursor-pointer">
                 Cancel
               </button>
-              <button type="submit" disabled={isSavingClient} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isSavingClient} className="px-5 py-2 bg-forest hover:bg-forest-dark text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                 {isSavingClient ? "Saving..." : (selectedClientId ? "Update" : "Save Client")}
               </button>
             </div>
@@ -539,10 +610,10 @@ export default function DashboardPage() {
         <form onSubmit={handleSaveInvoice} className="flex flex-col h-full">
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-semibold text-[#2C2C2A]">Client <span className="text-[#8A3C3C]">*</span></label>
+              <label className="text-sm font-semibold text-onyx">Client <span className="text-crimson">*</span></label>
               <button 
                 type="button" 
-                className="text-xs font-medium text-[#3A4A3F] hover:underline cursor-pointer transition-all"
+                className="text-xs font-medium text-forest hover:underline cursor-pointer transition-all"
                 onClick={() => { setIsInvoiceDrawerOpen(false); openNewClient(); }}
               >
                 Create new client
@@ -595,23 +666,23 @@ export default function DashboardPage() {
             />
           </div>
           
-          <div className="flex justify-between items-center pt-6 mt-6 border-t border-[#EFECE6]">
+          <div className="flex justify-between items-center pt-6 mt-6 border-t border-oatmeal">
             <div>
               {selectedInvoiceId && (
                 <button 
                   type="button" 
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="px-4 py-2 text-[#8A3C3C] font-medium hover:bg-[#8A3C3C]/10 rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 cursor-pointer"
+                  className="px-4 py-2 text-crimson font-medium hover:bg-crimson/10 rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 cursor-pointer"
                 >
                   Delete
                 </button>
               )}
             </div>
             <div className="flex gap-3">
-              <button type="button" onClick={closeInvoiceDrawer} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer">
+              <button type="button" onClick={closeInvoiceDrawer} className="px-4 py-2 text-onyx font-medium border border-oatmeal hover:bg-onyx/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer">
                 Cancel
               </button>
-              <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-forest hover:bg-forest-dark text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                 {isSavingInvoice ? "Saving..." : (selectedInvoiceId ? "Update" : "Create")}
               </button>
             </div>
@@ -625,15 +696,15 @@ export default function DashboardPage() {
           <form onSubmit={handleSendFollowUp} className="flex flex-col h-full">
             <div className="flex-1 space-y-5">
               
-              <div className="bg-[#FFFFFF] border border-[#EFECE6] p-4 rounded-lg flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-oatmeal p-4 rounded-lg flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs text-[#6A6A65] font-semibold uppercase tracking-wider mb-0.5">To Client</p>
-                  <p className="font-medium text-[#2C2C2A]">{selectedFollowUpInvoice.client?.name}</p>
-                  <p className="text-sm text-[#6A6A65]">{selectedFollowUpInvoice.client?.email || "No email recorded"}</p>
+                  <p className="text-xs text-stone font-semibold uppercase tracking-wider mb-0.5">To Client</p>
+                  <p className="font-medium text-onyx">{selectedFollowUpInvoice.client?.name}</p>
+                  <p className="text-sm text-stone">{selectedFollowUpInvoice.client?.email || "No email recorded"}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-[#6A6A65] font-semibold uppercase tracking-wider mb-0.5">Amount Due</p>
-                  <p className="font-medium text-[#8A3C3C]">{formatCurrency(selectedFollowUpInvoice.amount)}</p>
+                  <p className="text-xs text-stone font-semibold uppercase tracking-wider mb-0.5">Amount Due</p>
+                  <p className="font-medium text-crimson">{formatCurrency(selectedFollowUpInvoice.amount)}</p>
                 </div>
               </div>
 
@@ -642,7 +713,7 @@ export default function DashboardPage() {
                   label="Subject" 
                   defaultValue={`Following up: Invoice ${selectedFollowUpInvoice.invoiceNumber}`}
                   readOnly
-                  className="bg-black/5 font-medium"
+                  className="bg-onyx/5 font-medium"
                 />
                 <FormField 
                   as="textarea"
@@ -654,14 +725,14 @@ export default function DashboardPage() {
 
             </div>
             
-            <div className="flex justify-end items-center pt-6 mt-6 border-t border-[#EFECE6] gap-3">
-              <button type="button" onClick={() => setIsFollowUpOpen(false)} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer">
+            <div className="flex justify-end items-center pt-6 mt-6 border-t border-oatmeal gap-3">
+              <button type="button" onClick={() => setIsFollowUpOpen(false)} className="px-4 py-2 text-onyx font-medium border border-oatmeal hover:bg-onyx/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer">
                 Cancel
               </button>
               <button 
                 type="submit" 
                 disabled={isSendingFollowUp || !selectedFollowUpInvoice.client?.email} 
-                className="flex items-center gap-2 px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:active:scale-100"
+                className="flex items-center gap-2 px-5 py-2 bg-forest hover:bg-forest-dark text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:active:scale-100"
               >
                 {isSendingFollowUp ? (
                   <>Sending...</>
@@ -677,6 +748,102 @@ export default function DashboardPage() {
             </div>
           </form>
         )}
+      </Drawer>
+
+      {/* --- SETTINGS DRAWER --- */}
+      <Drawer isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="Settings">
+        <div className="flex flex-col h-full space-y-8">
+          
+          {/* Theme Settings */}
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-stone mb-4 border-b border-oatmeal pb-2">Appearance</h3>
+            <div className="flex items-center justify-between p-4 bg-white border border-oatmeal rounded-xl shadow-sm">
+              <div>
+                <p className="font-medium text-onyx">Dark Mode</p>
+                <p className="text-sm text-stone">Switch to a darker theme</p>
+              </div>
+              <button 
+                onClick={toggleDarkMode}
+                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${isDarkMode ? 'bg-forest' : 'bg-stone/30'}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isDarkMode ? 'left-7' : 'left-1'}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Security Settings */}
+          <div className="flex-1">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-stone mb-4 border-b border-oatmeal pb-2">Security</h3>
+            
+            <div className="bg-white border border-oatmeal rounded-xl shadow-sm p-5 space-y-4">
+              <div>
+                <p className="font-medium text-onyx">Two-Factor Authentication (2FA)</p>
+                <p className="text-sm text-stone mb-4">Make your account as secure as it gets by requiring a code from your authenticator app.</p>
+                
+                {session?.user?.twoFactorEnabled || is2FAEnabled ? (
+                  <div className="inline-flex px-3 py-1.5 bg-forest/10 border border-forest/20 text-forest text-xs font-bold rounded text-center tracking-wide uppercase">
+                    2FA is Enabled
+                  </div>
+                ) : (
+                  <>
+                    {!twoFactorUri ? (
+                      <form onSubmit={handleEnable2FA} className="flex gap-3 items-end">
+                        <div className="flex-1">
+                          <FormField 
+                            label="Enter your password to setup"
+                            type="password"
+                            required
+                            value={twoFactorPassword}
+                            onChange={e => setTwoFactorPassword(e.target.value)}
+                            placeholder="Password"
+                          />
+                        </div>
+                        <button 
+                          type="submit" 
+                          disabled={isSettingUp2FA}
+                          className="mb-4 px-4 py-2.5 bg-onyx text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-70"
+                        >
+                          {isSettingUp2FA ? "..." : "Setup 2FA"}
+                        </button>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleVerify2FA} className="space-y-4 bg-pearl p-4 border border-oatmeal rounded-lg">
+                        <p className="text-sm font-medium text-onyx text-center">Scan this QR Code in your Authenticator App (Google Authenticator, Authy)</p>
+                        <div className="flex justify-center bg-white p-2 rounded-lg border border-oatmeal w-fit mx-auto">
+                          <QRCodeSVG value={twoFactorUri} size={150} />
+                        </div>
+                        <FormField 
+                          label="Enter 6-digit code from app"
+                          type="text"
+                          required
+                          value={twoFactorCode}
+                          onChange={e => setTwoFactorCode(e.target.value)}
+                          placeholder="123456"
+                          maxLength={6}
+                        />
+                        <button 
+                          type="submit" 
+                          className="w-full px-4 py-2.5 bg-forest hover:bg-forest-dark text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow cursor-pointer"
+                        >
+                          Verify & Enable
+                        </button>
+                      </form>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 mt-auto border-t border-oatmeal pb-4">
+             <button 
+              onClick={handleSignOut} 
+              className="w-full px-5 py-3 bg-danger-bg hover:bg-danger-border/50 border border-danger-border text-crimson font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer text-center"
+            >
+              Sign Out of Account
+            </button>
+          </div>
+        </div>
       </Drawer>
 
       <ConfirmDialog 
@@ -710,8 +877,8 @@ export default function DashboardPage() {
 
 function MetricCard({ title, value, valueColor }: { title: string, value: string, valueColor: string }) {
   return (
-    <div className="bg-[#FFFFFF] border border-[#EFECE6] p-6 rounded-xl flex flex-col justify-between h-[120px]">
-      <p className="text-sm font-medium text-[#6A6A65]">{title}</p>
+    <div className="bg-white border border-oatmeal p-6 rounded-xl flex flex-col justify-between h-[120px]">
+      <p className="text-sm font-medium text-stone">{title}</p>
       <p className={`text-3xl font-medium ${valueColor}`}>{value}</p>
     </div>
   );
