@@ -934,7 +934,7 @@ export default function DashboardPage() {
                         <button 
                           type="submit" 
                           disabled={isSettingUp2FA}
-                          className="mb-4 px-4 py-2.5 bg-onyx text-pure-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-70"
+                          className="mb-4 px-4 py-2.5 bg-forest hover:bg-forest-dark text-pure-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-70"
                         >
                           {isSettingUp2FA ? "..." : "Setup 2FA"}
                         </button>

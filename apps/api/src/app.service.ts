@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service.js';
-import * as bcrypt from 'bcrypt';
+import { hashPassword } from 'better-auth/crypto';
 
 @Injectable()
 export class AppService {
   constructor(private readonly prisma: PrismaService) {}
 
   async setPassword(userId: string, password: string) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
     const existing = await this.prisma.account.findFirst({
       where: { userId, providerId: 'credential' }
     });
