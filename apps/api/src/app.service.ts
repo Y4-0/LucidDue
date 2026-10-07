@@ -51,7 +51,7 @@ export class AppService {
         overdueInvoices,
         activeClients
       },
-      clients: clients.map(c => ({ value: c.id, label: c.name })),
+      clients,
       upcomingInvoices: upcomingInvoices.slice(0, 5),
       actionNeededInvoices: actionNeededInvoices.slice(0, 5)
     };
@@ -69,6 +69,24 @@ export class AppService {
     });
   }
 
+  async updateClient(userId: string, id: string, data: any) {
+    return this.prisma.client.update({
+      where: { id, userId },
+      data: {
+        name: data.name,
+        email: data.email,
+        company: data.company,
+        notes: data.notes,
+      }
+    });
+  }
+
+  async deleteClient(userId: string, id: string) {
+    return this.prisma.client.delete({
+      where: { id, userId }
+    });
+  }
+
   async createInvoice(userId: string, data: any) {
     return this.prisma.invoice.create({
       data: {
@@ -80,6 +98,25 @@ export class AppService {
         clientId: data.client,
         userId
       }
+    });
+  }
+  async updateInvoice(userId: string, id: string, data: any) {
+    return this.prisma.invoice.update({
+      where: { id, userId },
+      data: {
+        invoiceNumber: data.invoiceNumber,
+        amount: parseFloat(data.amount),
+        issueDate: new Date(data.issueDate),
+        dueDate: new Date(data.dueDate),
+        notes: data.notes,
+        clientId: data.client,
+      }
+    });
+  }
+
+  async deleteInvoice(userId: string, id: string) {
+    return this.prisma.invoice.delete({
+      where: { id, userId }
     });
   }
 }

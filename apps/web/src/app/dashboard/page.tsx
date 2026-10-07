@@ -27,33 +27,44 @@ export default function DashboardPage() {
     overdueInvoices: 0,
     activeClients: 0
   });
-  const [clients, setClients] = useState<{ value: string, label: string }[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [upcomingInvoices, setUpcomingInvoices] = useState<any[]>([]);
   const [actionNeededInvoices, setActionNeededInvoices] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
-  // --- Add Client State ---
+  // --- Add/Update Client State ---
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+  const [isManageClientsOpen, setIsManageClientsOpen] = useState(false);
   const [showClientConfirm, setShowClientConfirm] = useState(false);
+  const [showDeleteClientConfirm, setShowDeleteClientConfirm] = useState(false);
   const [isSavingClient, setIsSavingClient] = useState(false);
+  const [isDeletingClient, setIsDeletingClient] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+
   const initialClientForm = { name: "", email: "", company: "", notes: "" };
   const [clientForm, setClientForm] = useState(initialClientForm);
-  const isClientDirty = JSON.stringify(clientForm) !== JSON.stringify(initialClientForm);
+  const [originalClientForm, setOriginalClientForm] = useState(initialClientForm);
+  const isClientDirty = JSON.stringify(clientForm) !== JSON.stringify(originalClientForm);
 
-  // --- Add Invoice State ---
-  const [isAddInvoiceOpen, setIsAddInvoiceOpen] = useState(false);
+  // --- Invoice State ---
+  const [isInvoiceDrawerOpen, setIsInvoiceDrawerOpen] = useState(false);
   const [showInvoiceConfirm, setShowInvoiceConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
+  const [isDeletingInvoice, setIsDeletingInvoice] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+
   const initialInvoiceForm = { 
     client: "", 
-    invoiceNumber: "INV-" + Math.floor(Math.random() * 10000), 
+    invoiceNumber: "", 
     amount: "", 
     issueDate: new Date().toISOString().split('T')[0], 
     dueDate: "", 
     notes: "" 
   };
   const [invoiceForm, setInvoiceForm] = useState(initialInvoiceForm);
-  const isInvoiceDirty = JSON.stringify(invoiceForm) !== JSON.stringify(initialInvoiceForm);
+  const [originalInvoiceForm, setOriginalInvoiceForm] = useState(initialInvoiceForm);
+  const isInvoiceDirty = JSON.stringify(invoiceForm) !== JSON.stringify(originalInvoiceForm);
 
   // Initial Fetch
   useEffect(() => {
@@ -90,7 +101,28 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-  // --- Handlers for Add Client ---
+  // --- Handlers for Client ---
+  const openNewClient = () => {
+    setSelectedClientId(null);
+    setClientForm(initialClientForm);
+    setOriginalClientForm(initialClientForm);
+    setIsAddClientOpen(true);
+  };
+
+  const openUpdateClient = (client: any) => {
+    setSelectedClientId(client.id);
+    const updateForm = {
+      name: client.name,
+      email: client.email || "",
+      company: client.company || "",
+      notes: client.notes || ""
+    };
+    setClientForm(updateForm);
+    setOriginalClientForm(updateForm);
+    setIsManageClientsOpen(false);
+    setIsAddClientOpen(true);
+  };
+
   const closeAddClient = () => {
     if (isClientDirty) setShowClientConfirm(true);
     else setIsAddClientOpen(false);
@@ -102,14 +134,21 @@ export default function DashboardPage() {
     
     setIsSavingClient(true);
     try {
-      await authClient.$fetch("http://localhost:3001/api/clients", {
-        method: 'POST',
-        body: clientForm
-      });
-      await fetchDashboardData(); // Refresh list immediately
-      setClientForm(initialClientForm);
+      if (selectedClientId) {
+        await authClient.$fetch(`http://localhost:3001/api/clients/${selectedClientId}`, {
+          method: 'PUT',
+          body: clientForm
+        });
+        showToast("Client updated successfully");
+      } else {
+        await authClient.$fetch("http://localhost:3001/api/clients", {
+          method: 'POST',
+          body: clientForm
+        });
+        showToast("Client added successfully");
+      }
+      await fetchDashboardData();
       setIsAddClientOpen(false);
-      showToast("Client added successfully");
     } catch (e) {
       showToast("Failed to save client", "error");
     } finally {
@@ -117,10 +156,51 @@ export default function DashboardPage() {
     }
   };
 
-  // --- Handlers for Add Invoice ---
-  const closeAddInvoice = () => {
+  const handleDeleteClient = async () => {
+    if (!selectedClientId) return;
+    setIsDeletingClient(true);
+    try {
+      await authClient.$fetch(`http://localhost:3001/api/clients/${selectedClientId}`, {
+        method: 'DELETE'
+      });
+      await fetchDashboardData();
+      setShowDeleteClientConfirm(false);
+      setIsAddClientOpen(false);
+      showToast("Client deleted successfully");
+    } catch (e) {
+      showToast("Failed to delete client", "error");
+    } finally {
+      setIsDeletingClient(false);
+    }
+  };
+
+  // --- Handlers for Invoice ---
+  const openNewInvoice = () => {
+    setSelectedInvoiceId(null);
+    const newForm = { ...initialInvoiceForm, invoiceNumber: "INV-" + Math.floor(Math.random() * 10000) };
+    setInvoiceForm(newForm);
+    setOriginalInvoiceForm(newForm);
+    setIsInvoiceDrawerOpen(true);
+  };
+
+  const openUpdateInvoice = (inv: any) => {
+    setSelectedInvoiceId(inv.id);
+    const updateForm = {
+      client: inv.clientId,
+      invoiceNumber: inv.invoiceNumber,
+      amount: inv.amount.toString(),
+      issueDate: new Date(inv.issueDate).toISOString().split('T')[0],
+      dueDate: new Date(inv.dueDate).toISOString().split('T')[0],
+      notes: inv.notes || ""
+    };
+    setInvoiceForm(updateForm);
+    setOriginalInvoiceForm(updateForm);
+    setIsInvoiceDrawerOpen(true);
+  };
+
+  const closeInvoiceDrawer = () => {
     if (isInvoiceDirty) setShowInvoiceConfirm(true);
-    else setIsAddInvoiceOpen(false);
+    else setIsInvoiceDrawerOpen(false);
   };
 
   const handleSaveInvoice = async (e: React.FormEvent) => {
@@ -133,18 +213,43 @@ export default function DashboardPage() {
     
     setIsSavingInvoice(true);
     try {
-      await authClient.$fetch("http://localhost:3001/api/invoices", {
-        method: 'POST',
-        body: invoiceForm
-      });
-      await fetchDashboardData(); // Refresh lists and metrics immediately
-      setInvoiceForm({ ...initialInvoiceForm, invoiceNumber: "INV-" + Math.floor(Math.random() * 10000) });
-      setIsAddInvoiceOpen(false);
-      showToast("Invoice created successfully");
+      if (selectedInvoiceId) {
+        await authClient.$fetch(`http://localhost:3001/api/invoices/${selectedInvoiceId}`, {
+          method: 'PUT',
+          body: invoiceForm
+        });
+        showToast("Invoice updated successfully");
+      } else {
+        await authClient.$fetch("http://localhost:3001/api/invoices", {
+          method: 'POST',
+          body: invoiceForm
+        });
+        showToast("Invoice created successfully");
+      }
+      await fetchDashboardData();
+      setIsInvoiceDrawerOpen(false);
     } catch (e) {
       showToast("Failed to save invoice", "error");
     } finally {
       setIsSavingInvoice(false);
+    }
+  };
+
+  const handleDeleteInvoice = async () => {
+    if (!selectedInvoiceId) return;
+    setIsDeletingInvoice(true);
+    try {
+      await authClient.$fetch(`http://localhost:3001/api/invoices/${selectedInvoiceId}`, {
+        method: 'DELETE'
+      });
+      await fetchDashboardData();
+      setShowDeleteConfirm(false);
+      setIsInvoiceDrawerOpen(false);
+      showToast("Invoice deleted successfully");
+    } catch (e) {
+      showToast("Failed to delete invoice", "error");
+    } finally {
+      setIsDeletingInvoice(false);
     }
   };
 
@@ -162,6 +267,9 @@ export default function DashboardPage() {
   const formattedCurrencyZero = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(0);
   const formatCurrency = (val: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
 
+  // Map clients to options format for Select component
+  const clientOptions = clients.map(c => ({ value: c.id, label: c.name }));
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] p-8 md:p-12 font-sans text-[#2C2C2A]">
       <div className="max-w-6xl mx-auto space-y-12">
@@ -175,15 +283,23 @@ export default function DashboardPage() {
             <p className="text-[#6A6A65] mt-2 font-medium">{today}</p>
           </div>
           
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-4 items-center flex-wrap">
+            {clients.length > 0 && (
+              <button 
+                onClick={() => setIsManageClientsOpen(true)}
+                className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-[#EFECE6] hover:bg-black/5 rounded-lg transition-colors cursor-pointer"
+              >
+                Manage Clients
+              </button>
+            )}
             <button 
-              onClick={() => setIsAddClientOpen(true)}
+              onClick={openNewClient}
               className="px-5 py-2.5 bg-transparent text-[#2C2C2A] font-medium border border-transparent hover:bg-black/5 rounded-lg transition-colors cursor-pointer"
             >
               + Add Client
             </button>
             <button 
-              onClick={() => setIsAddInvoiceOpen(true)}
+              onClick={openNewInvoice}
               className="px-5 py-2.5 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer shadow-sm"
             >
               + New Invoice
@@ -237,9 +353,17 @@ export default function DashboardPage() {
                       Overdue
                     </div>
                   </div>
-                  <button className="whitespace-nowrap px-6 py-3 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors w-full sm:w-auto shadow-sm cursor-pointer">
-                    Prepare Follow-up
-                  </button>
+                  <div className="flex gap-3 w-full sm:w-auto">
+                    <button 
+                      onClick={() => openUpdateInvoice(inv)}
+                      className="px-6 py-3 bg-transparent border border-[#EFECE6] hover:bg-white text-[#2C2C2A] font-medium rounded-lg transition-colors w-full sm:w-auto cursor-pointer"
+                    >
+                      View
+                    </button>
+                    <button className="whitespace-nowrap px-6 py-3 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors w-full sm:w-auto shadow-sm cursor-pointer">
+                      Follow-up
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -256,17 +380,22 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 upcomingInvoices.map(inv => (
-                  <div key={inv.id} className="bg-[#FFFFFF] border border-[#EFECE6] p-5 rounded-xl group cursor-pointer hover:border-[#3A4A3F]/20 transition-colors">
+                  <div key={inv.id} className="bg-[#FFFFFF] border border-[#EFECE6] p-5 rounded-xl group hover:border-[#3A4A3F]/20 transition-colors">
                     <div className="flex justify-between items-start mb-3">
-                      <span className="font-semibold text-[#2C2C2A]">{inv.client?.name}</span>
+                      <span className="font-semibold text-[#2C2C2A] truncate max-w-[150px]">{inv.client?.name}</span>
                       <span className="font-semibold text-[#2C2C2A]">{formatCurrency(inv.amount)}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mt-4">
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-[#6A6A65]">Due {new Date(inv.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         <span className="px-2 py-0.5 bg-[#F0F0EE] text-[#5E5E5A] text-[11px] font-bold tracking-wide uppercase rounded">Upcoming</span>
                       </div>
-                      <span className="text-sm font-medium text-[#6A6A65] opacity-0 group-hover:opacity-100 transition-opacity">View</span>
+                      <button 
+                        onClick={() => openUpdateInvoice(inv)}
+                        className="text-sm font-medium text-[#6A6A65] hover:text-[#2C2C2A] cursor-pointer"
+                      >
+                        View
+                      </button>
                     </div>
                   </div>
                 ))
@@ -277,8 +406,33 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* --- ADD CLIENT MODAL --- */}
-      <Modal isOpen={isAddClientOpen} onClose={closeAddClient} title="Add New Client">
+      {/* --- MANAGE CLIENTS MODAL --- */}
+      <Modal isOpen={isManageClientsOpen} onClose={() => setIsManageClientsOpen(false)} title="Manage Clients">
+        <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
+          {clients.map(client => (
+            <div key={client.id} className="flex justify-between items-center p-3 border border-[#EFECE6] rounded-lg bg-white">
+              <div>
+                <p className="font-medium text-[#2C2C2A]">{client.name}</p>
+                {client.email && <p className="text-xs text-[#6A6A65] mt-1">{client.email}</p>}
+              </div>
+              <button 
+                onClick={() => openUpdateClient(client)}
+                className="px-3 py-1.5 text-xs font-medium text-[#2C2C2A] bg-black/5 hover:bg-black/10 rounded cursor-pointer transition-colors"
+              >
+                Edit
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end mt-4 pt-4 border-t border-[#EFECE6]">
+          <button onClick={() => setIsManageClientsOpen(false)} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
+            Close
+          </button>
+        </div>
+      </Modal>
+
+      {/* --- ADD/UPDATE CLIENT MODAL --- */}
+      <Modal isOpen={isAddClientOpen} onClose={closeAddClient} title={selectedClientId ? "Update Client" : "Add New Client"}>
         <form onSubmit={handleSaveClient} className="flex flex-col gap-2">
           <FormField 
             label="Client Name" 
@@ -308,13 +462,26 @@ export default function DashboardPage() {
             value={clientForm.notes}
             onChange={e => setClientForm({...clientForm, notes: e.target.value})}
           />
-          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#EFECE6]">
-            <button type="button" onClick={closeAddClient} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
-              Cancel
-            </button>
-            <button type="submit" disabled={isSavingClient} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
-              {isSavingClient ? "Saving..." : "Save Client"}
-            </button>
+          <div className="flex justify-between items-center mt-4 pt-4 border-t border-[#EFECE6]">
+            <div>
+              {selectedClientId && (
+                <button 
+                  type="button" 
+                  onClick={() => setShowDeleteClientConfirm(true)}
+                  className="px-4 py-2 text-[#8A3C3C] font-medium hover:bg-[#8A3C3C]/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={closeAddClient} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
+                Cancel
+              </button>
+              <button type="submit" disabled={isSavingClient} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+                {isSavingClient ? "Saving..." : (selectedClientId ? "Update" : "Save Client")}
+              </button>
+            </div>
           </div>
         </form>
       </Modal>
@@ -333,8 +500,18 @@ export default function DashboardPage() {
         onCancel={() => setShowClientConfirm(false)}
       />
 
-      {/* --- ADD INVOICE DRAWER --- */}
-      <Drawer isOpen={isAddInvoiceOpen} onClose={closeAddInvoice} title="Create New Invoice">
+      <ConfirmDialog 
+        isOpen={showDeleteClientConfirm}
+        title="Delete Client"
+        message="Are you sure you want to delete this client? This will also delete all invoices associated with them. This action cannot be undone."
+        confirmText={isDeletingClient ? "Deleting..." : "Delete Client"}
+        isDestructive
+        onConfirm={handleDeleteClient}
+        onCancel={() => setShowDeleteClientConfirm(false)}
+      />
+
+      {/* --- INVOICE DRAWER --- */}
+      <Drawer isOpen={isInvoiceDrawerOpen} onClose={closeInvoiceDrawer} title={selectedInvoiceId ? "Update Invoice" : "Create New Invoice"}>
         <form onSubmit={handleSaveInvoice} className="flex flex-col h-full">
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
@@ -342,7 +519,7 @@ export default function DashboardPage() {
               <button 
                 type="button" 
                 className="text-xs font-medium text-[#3A4A3F] hover:underline cursor-pointer"
-                onClick={() => setIsAddClientOpen(true)}
+                onClick={() => { setIsInvoiceDrawerOpen(false); openNewClient(); }}
               >
                 Create new client
               </button>
@@ -350,7 +527,7 @@ export default function DashboardPage() {
             <Select 
               label=""
               required
-              options={clients}
+              options={clientOptions}
               value={invoiceForm.client}
               onChange={e => setInvoiceForm({...invoiceForm, client: e.target.value})}
             />
@@ -394,13 +571,26 @@ export default function DashboardPage() {
             />
           </div>
           
-          <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-[#EFECE6]">
-            <button type="button" onClick={closeAddInvoice} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
-              Cancel
-            </button>
-            <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
-              {isSavingInvoice ? "Creating..." : "Create Invoice"}
-            </button>
+          <div className="flex justify-between items-center pt-6 mt-6 border-t border-[#EFECE6]">
+            <div>
+              {selectedInvoiceId && (
+                <button 
+                  type="button" 
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-4 py-2 text-[#8A3C3C] font-medium hover:bg-[#8A3C3C]/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={closeInvoiceDrawer} className="px-4 py-2 text-[#2C2C2A] font-medium border border-[#EFECE6] rounded-lg hover:bg-black/5 transition-colors cursor-pointer">
+                Cancel
+              </button>
+              <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-[#3A4A3F] hover:bg-[#2E3A32] text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+                {isSavingInvoice ? "Saving..." : (selectedInvoiceId ? "Update" : "Create")}
+              </button>
+            </div>
           </div>
         </form>
       </Drawer>
@@ -409,14 +599,24 @@ export default function DashboardPage() {
         isOpen={showInvoiceConfirm}
         title="Unsaved Changes"
         message="You have entered data for this invoice. Are you sure you want to close? Your invoice will not be saved."
-        confirmText="Discard Invoice"
+        confirmText="Discard Changes"
         isDestructive
         onConfirm={() => {
           setShowInvoiceConfirm(false);
           setInvoiceForm(initialInvoiceForm);
-          setIsAddInvoiceOpen(false);
+          setIsInvoiceDrawerOpen(false);
         }}
         onCancel={() => setShowInvoiceConfirm(false)}
+      />
+
+      <ConfirmDialog 
+        isOpen={showDeleteConfirm}
+        title="Delete Invoice"
+        message="Are you sure you want to delete this invoice? This action cannot be undone."
+        confirmText={isDeletingInvoice ? "Deleting..." : "Delete Invoice"}
+        isDestructive
+        onConfirm={handleDeleteInvoice}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
 
       <ToastComponent />
