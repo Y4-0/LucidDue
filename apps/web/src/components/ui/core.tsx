@@ -227,7 +227,7 @@ export function ConfirmDialog({ isOpen, title, message, confirmText = "Confirm",
         <button onClick={onCancel} className="px-4 py-2 text-onyx font-medium border border-oatmeal rounded-lg hover:bg-onyx/5 transition-colors">
           {cancelText}
         </button>
-        <button onClick={onConfirm} className={`px-4 py-2 text-white font-medium rounded-lg transition-colors ${isDestructive ? 'bg-[#8A3C3C] hover:bg-[#8A3C3C]/90' : 'bg-forest hover:bg-forest-dark'}`}>
+        <button onClick={onConfirm} className={`px-4 py-2 text-pure-white font-medium rounded-lg transition-colors ${isDestructive ? 'bg-[#8A3C3C] hover:bg-[#8A3C3C]/90' : 'bg-forest hover:bg-forest-dark'}`}>
           {confirmText}
         </button>
       </div>
@@ -250,8 +250,8 @@ export const useToast = () => {
     return (
       <div className="fixed bottom-6 right-6 z-[60] animate-in slide-in-from-bottom-5 fade-in duration-300">
         <div className={`flex items-center gap-3 px-5 py-3.5 rounded-lg shadow-lg border ${
-          toast.type === 'success' ? 'bg-forest text-white border-[#2E3A32]' : 
-          toast.type === 'error' ? 'bg-[#8A3C3C] text-white border-[#6c2e2e]' : 
+          toast.type === 'success' ? 'bg-forest text-pure-white border-[#2E3A32]' : 
+          toast.type === 'error' ? 'bg-[#8A3C3C] text-pure-white border-[#6c2e2e]' : 
           'bg-white text-onyx border-oatmeal'
         }`}>
           {toast.type === 'success' && <CheckCircle size={18} />}

@@ -84,18 +84,61 @@ export default function DashboardPage() {
   const [backupCodes, setBackupCodes] = useState<string>("");
   const [hasPassword, setHasPassword] = useState(true);
 
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+
   useEffect(() => {
     // Check initial dark mode state
-    if (document.documentElement.classList.contains("dark")) setIsDarkMode(true);
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark" || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setIsDarkMode(true);
+      document.documentElement.classList.add("dark");
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove("dark");
+    }
   }, []);
 
   const toggleDarkMode = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove("dark");
-      setIsDarkMode(false);
-    } else {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    if (newMode) {
       document.documentElement.classList.add("dark");
-      setIsDarkMode(true);
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      showToast("Passwords do not match", "error");
+      return;
+    }
+    if (newPassword.length < 8) {
+      showToast("Password must be at least 8 characters", "error");
+      return;
+    }
+    setIsSettingPassword(true);
+    try {
+      const res = await authClient.$fetch("http://localhost:3001/api/set-password", {
+        method: "POST",
+        body: { password: newPassword },
+      });
+      if (res.data?.success) {
+        setHasPassword(true);
+        setTwoFactorPassword(newPassword);
+        showToast("Password set successfully! You can now setup 2FA.");
+      } else {
+        showToast("Failed to set password", "error");
+      }
+    } catch (err) {
+      showToast("Network error. Please try again.", "error");
+    } finally {
+      setIsSettingPassword(false);
     }
   };
 
@@ -397,7 +440,7 @@ export default function DashboardPage() {
             </button>
             <button 
               onClick={openNewInvoice}
-              className="px-5 py-2.5 bg-forest hover:bg-forest-dark text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
+              className="px-5 py-2.5 bg-forest hover:bg-forest-dark text-pure-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
             >
               + New Invoice
             </button>
@@ -440,7 +483,7 @@ export default function DashboardPage() {
                   <button onClick={openNewClient} className="px-4 py-2 bg-transparent border border-oatmeal text-onyx text-sm font-medium rounded-lg hover:bg-onyx/5 hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer">
                     Add a Client
                   </button>
-                  <button onClick={openNewInvoice} className="px-4 py-2 bg-forest text-white text-sm font-medium rounded-lg hover:bg-forest-dark hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer shadow-sm">
+                  <button onClick={openNewInvoice} className="px-4 py-2 bg-forest text-pure-white text-sm font-medium rounded-lg hover:bg-forest-dark hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer shadow-sm">
                     Create Invoice
                   </button>
                 </div>
@@ -467,7 +510,7 @@ export default function DashboardPage() {
                     </button>
                     <button 
                       onClick={() => openFollowUp(inv)}
-                      className="whitespace-nowrap px-6 py-3 bg-forest hover:bg-forest-dark text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto shadow-sm hover:shadow cursor-pointer"
+                      className="whitespace-nowrap px-6 py-3 bg-forest hover:bg-forest-dark text-pure-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 w-full sm:w-auto shadow-sm hover:shadow cursor-pointer"
                     >
                       Follow-up
                     </button>
@@ -598,7 +641,7 @@ export default function DashboardPage() {
               <button type="button" onClick={closeAddClient} className="px-4 py-2 text-onyx font-medium border border-oatmeal rounded-lg hover:bg-onyx/5 transition-colors cursor-pointer">
                 Cancel
               </button>
-              <button type="submit" disabled={isSavingClient} className="px-5 py-2 bg-forest hover:bg-forest-dark text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isSavingClient} className="px-5 py-2 bg-forest hover:bg-forest-dark text-pure-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                 {isSavingClient ? "Saving..." : (selectedClientId ? "Update" : "Save Client")}
               </button>
             </div>
@@ -707,7 +750,7 @@ export default function DashboardPage() {
               <button type="button" onClick={closeInvoiceDrawer} className="px-4 py-2 text-onyx font-medium border border-oatmeal hover:bg-onyx/5 hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 cursor-pointer">
                 Cancel
               </button>
-              <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-forest hover:bg-forest-dark text-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isSavingInvoice} className="px-5 py-2 bg-forest hover:bg-forest-dark text-pure-white font-medium rounded-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
                 {isSavingInvoice ? "Saving..." : (selectedInvoiceId ? "Update" : "Create")}
               </button>
             </div>
@@ -757,7 +800,7 @@ export default function DashboardPage() {
               <button 
                 type="submit" 
                 disabled={isSendingFollowUp || !selectedFollowUpInvoice.client?.email} 
-                className="flex items-center gap-2 px-5 py-2 bg-forest hover:bg-forest-dark text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:active:scale-100"
+                className="flex items-center gap-2 px-5 py-2 bg-forest hover:bg-forest-dark text-pure-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow hover:shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:active:scale-100"
               >
                 {isSendingFollowUp ? (
                   <>Sending...</>
@@ -811,26 +854,49 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <>
-                    {!twoFactorUri ? (
+                    {!hasPassword ? (
+                      <form onSubmit={handleSetPassword} className="space-y-3 bg-pearl p-4 border border-oatmeal rounded-lg">
+                        <p className="text-sm font-medium text-onyx mb-2">You signed up with Google. To enable 2FA, please set a password first.</p>
+                        <FormField 
+                          label="New Password"
+                          type="password"
+                          required
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                          placeholder="Must be at least 8 characters"
+                        />
+                        <FormField 
+                          label="Confirm Password"
+                          type="password"
+                          required
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          placeholder="Type password again"
+                        />
+                        <button 
+                          type="submit" 
+                          disabled={isSettingPassword}
+                          className="w-full px-4 py-2.5 bg-forest hover:bg-forest-dark text-pure-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow cursor-pointer disabled:opacity-70"
+                        >
+                          {isSettingPassword ? "Saving..." : "Set Password"}
+                        </button>
+                      </form>
+                    ) : !twoFactorUri ? (
                       <form onSubmit={handleEnable2FA} className="flex gap-3 items-end">
                         <div className="flex-1">
-                          {hasPassword ? (
-                            <FormField 
-                              label="Enter your password to setup"
-                              type="password"
-                              required
-                              value={twoFactorPassword}
-                              onChange={e => setTwoFactorPassword(e.target.value)}
-                              placeholder="Password"
-                            />
-                          ) : (
-                            <p className="text-sm font-medium text-onyx mb-2">You signed up with Google. Click below to generate your 2FA code.</p>
-                          )}
+                          <FormField 
+                            label="Enter your password to setup"
+                            type="password"
+                            required
+                            value={twoFactorPassword}
+                            onChange={e => setTwoFactorPassword(e.target.value)}
+                            placeholder="Password"
+                          />
                         </div>
                         <button 
                           type="submit" 
                           disabled={isSettingUp2FA}
-                          className={`px-4 py-2.5 bg-onyx text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-70 ${hasPassword ? 'mb-4' : ''}`}
+                          className="mb-4 px-4 py-2.5 bg-onyx text-pure-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-70"
                         >
                           {isSettingUp2FA ? "..." : "Setup 2FA"}
                         </button>
@@ -852,7 +918,7 @@ export default function DashboardPage() {
                         />
                         <button 
                           type="submit" 
-                          className="w-full px-4 py-2.5 bg-forest hover:bg-forest-dark text-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow cursor-pointer"
+                          className="w-full px-4 py-2.5 bg-forest hover:bg-forest-dark text-pure-white font-medium hover:-translate-y-0.5 active:scale-95 rounded-lg transition-all duration-200 shadow cursor-pointer"
                         >
                           Verify & Enable
                         </button>

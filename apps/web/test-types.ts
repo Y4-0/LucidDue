@@ -1,2 +1,2 @@
 import { authClient } from "./src/lib/auth-client";
-console.log(authClient.updateUser);
+type AuthClient = typeof authClient;

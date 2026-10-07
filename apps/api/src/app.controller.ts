@@ -13,6 +13,12 @@ export class AppController {
     return session.user;
   }
 
+  @Post('set-password')
+  async setPassword(@Req() req: Request, @Body() body: any) {
+    const user = await this.getSessionUser(req);
+    return this.appService.setPassword(user.id, body.password);
+  }
+
   @Get('dashboard')
   async getDashboardData(@Req() req: Request) {
     const user = await this.getSessionUser(req);

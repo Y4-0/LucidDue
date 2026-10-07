@@ -15,6 +15,7 @@
   --color-danger-border: var(--theme-danger-border);
   --color-ash: var(--theme-ash);
   --color-graphite: var(--theme-graphite);
+  --color-pure-white: #FFFFFF;
 
   --font-sans: var(--font-inter);
   --font-serif: var(--font-playfair);

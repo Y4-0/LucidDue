@@ -1,9 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service.js';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AppService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async setPassword(userId: string, password: string) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const existing = await this.prisma.account.findFirst({
+      where: { userId, providerId: 'credential' }
+    });
+
+    if (existing) {
+      await this.prisma.account.update({
+        where: { id: existing.id },
+        data: { password: hashedPassword }
+      });
+    } else {
+      await this.prisma.account.create({
+        data: {
+          id: crypto.randomUUID(),
+          accountId: userId,
+          providerId: 'credential',
+          userId: userId,
+          password: hashedPassword,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+    }
+    return { success: true };
+  }
 
   async getDashboardData(userId: string) {
     const clients = await this.prisma.client.findMany({ where: { userId } });
